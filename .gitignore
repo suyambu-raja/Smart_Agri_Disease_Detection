@@ -1,0 +1,55 @@
+# ----------------------------------------------------------------------
+# 1. CORE IGNORES (Folders that should never be committed)
+# ----------------------------------------------------------------------
+# Python virtual environments (Render creates its own)
+venv/
+venv312/
+ENV/
+env/
+
+# Node dependencies (Render runs 'npm install')
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment variables (Add these manually in Render Dashboard)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ----------------------------------------------------------------------
+# 2. PYTHON / DJANGO STUFF
+# ----------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+db.sqlite3  # Usually ignored unless you want a starter DB
+media/      # User uploaded images (don't push these)
+staticfiles/
+
+# ----------------------------------------------------------------------
+# 3. DATA & MODELS
+# ----------------------------------------------------------------------
+# EXCLUDE the raw training data (100k images) - Render doesn't need it!
+backend/data/
+data/
+
+# INCLUDE the trained models (Critical for deployment!)
+!backend/models/
+!models/
+
+# ----------------------------------------------------------------------
+# 4. BUILD OUTPUTS
+# ----------------------------------------------------------------------
+dist/
+build/
+coverage/

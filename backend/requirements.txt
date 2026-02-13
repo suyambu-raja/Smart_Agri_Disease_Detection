@@ -1,0 +1,28 @@
+# ──────────────────────────────────────────────
+# Smart Agriculture Backend – Requirements
+# ──────────────────────────────────────────────
+
+# Django & REST Framework
+Django>=4.2,<5.0
+djangorestframework>=3.14,<4.0
+django-cors-headers>=4.3,<5.0
+
+# Firebase
+firebase-admin>=6.2,<7.0
+
+# ML / AI
+tensorflow>=2.14,<3.0
+scikit-learn>=1.3,<2.0
+Pillow>=10.0,<11.0
+joblib>=1.3,<2.0
+numpy>=1.24,<2.0
+
+# Environment & Config
+python-dotenv>=1.0,<2.0
+
+# Server
+gunicorn>=21.2,<23.0
+whitenoise>=6.5,<7.0
+
+# Utilities
+requests>=2.31,<3.0
