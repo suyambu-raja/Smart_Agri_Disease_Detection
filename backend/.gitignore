@@ -1,0 +1,44 @@
+# ──────────────────────────────────────────
+# Git Ignore – Smart Agriculture Backend
+# ──────────────────────────────────────────
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Environment files
+.env
+
+# Firebase credentials (NEVER commit)
+firebase_credentials.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Django
+db.sqlite3
+staticfiles/
+media/
+
+# ML Models (too large for git)
+models/*.h5
+models/*.pkl
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
