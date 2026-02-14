@@ -62,7 +62,20 @@ INSTALLED_APPS = [
     'disease',
     'yield_prediction',
     'recommendation',
+    'tts',
+    'weather',
 ]
+
+# ... existing code ...
+
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'firebase-adminsdk.json')
+
+# AI Services
+# AI Services
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
+DISEASE_MODEL_PATH = os.path.join(BASE_DIR, 'models', 'disease_model.h5')
+# ... existing code ...
 
 # ──────────────────────────────────────────
 # 4. MIDDLEWARE

@@ -42,6 +42,8 @@ urlpatterns = [
     path('api/disease/', include('disease.urls')),
     path('api/yield/', include('yield_prediction.urls')),
     path('api/recommendation/', include('recommendation.urls')),
+    path('api/tts/', include('tts.urls')),
+    path('api/weather/', include('weather.urls')),
 ]
 
 from django.conf import settings
