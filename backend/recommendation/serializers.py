@@ -13,6 +13,11 @@ class RecommendationRequestSerializer(serializers.Serializer):
         required=True,
         help_text='The disease name (e.g., "Tomato Early Blight").',
     )
+    lang = serializers.CharField(
+        required=False,
+        default='en',
+        help_text='Language code (en/ta). Default: en',
+    )
 
 
 class RecommendationResponseSerializer(serializers.Serializer):

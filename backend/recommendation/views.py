@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 
-from .knowledge_base import get_recommendation, RECOMMENDATIONS
+from .knowledge_base import get_recommendation, RECOMMENDATIONS_EN
 from .serializers import RecommendationRequestSerializer
 
 logger = logging.getLogger(__name__)
@@ -18,10 +18,11 @@ logger = logging.getLogger(__name__)
 
 class RecommendationView(APIView):
     """
-    GET /api/recommendation/?disease_name=<disease>
+    GET /api/recommendation/?disease_name=<disease>&lang=<lang>
 
     Query params:
         disease_name (str): The disease name to look up.
+        lang (str): Language code ('en' or 'ta').
 
     Returns recommendations for treatment: fertilizers,
     pesticides, organic treatments, and preventive measures.
@@ -38,20 +39,22 @@ class RecommendationView(APIView):
             )
 
         disease_name = serializer.validated_data['disease_name']
-        recommendation = get_recommendation(disease_name)
+        lang = serializer.validated_data.get('lang', 'en')
+        
+        recommendation = get_recommendation(disease_name, lang=lang)
 
         if recommendation is None:
-            logger.warning(f"No recommendation found for: {disease_name}")
+            logger.warning(f"No recommendation found for: {disease_name} (lang={lang})")
             return Response(
                 {
                     'success': False,
-                    'error': f'No recommendations found for "{disease_name}".',
-                    'available_diseases': sorted(RECOMMENDATIONS.keys()),
+                    'error': f'No recommendations found for "{disease_name}" in {lang}.',
+                    'available_diseases': sorted(RECOMMENDATIONS_EN.keys()),
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        logger.info(f"Recommendation served for: {disease_name}")
+        logger.info(f"Recommendation served for: {disease_name} (lang={lang})")
         return Response({
             'success': True,
             'disease_name': disease_name,
@@ -70,6 +73,6 @@ class AvailableDiseasesView(APIView):
     def get(self, request):
         return Response({
             'success': True,
-            'diseases': sorted(RECOMMENDATIONS.keys()),
-            'count': len(RECOMMENDATIONS),
+            'diseases': sorted(RECOMMENDATIONS_EN.keys()),
+            'count': len(RECOMMENDATIONS_EN),
         })

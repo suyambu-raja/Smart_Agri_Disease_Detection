@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
+import { useTTS } from '@/hooks/useTTS';
 
 const DISTRICTS = [
   'Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem',
@@ -16,6 +17,7 @@ const Register = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { signUp, signInWithGoogle } = useAuth();
+  const { speak } = useTTS();
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -104,6 +106,7 @@ const Register = () => {
                 placeholder={t('name')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                onFocus={() => speak(t('enter_your_name') || 'Enter your name')}
                 className="w-full pl-11 pr-4 py-3.5 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
             </div>
@@ -114,6 +117,7 @@ const Register = () => {
                 placeholder={t('email')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => speak(t('enter_your_email') || 'Enter your email')}
                 className="w-full pl-11 pr-4 py-3.5 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
             </div>
@@ -124,6 +128,7 @@ const Register = () => {
                 placeholder={t('password')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => speak(t('enter_your_password') || 'Enter your password')}
                 className="w-full pl-11 pr-11 py-3.5 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
               <button
@@ -137,6 +142,7 @@ const Register = () => {
             <select
               value={district}
               onChange={(e) => setDistrict(e.target.value)}
+              onFocus={() => speak(t('select_district') || 'Select your district')}
               className="w-full px-4 py-3.5 bg-card border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all appearance-none"
             >
               <option value="">{t('district')}</option>
@@ -147,6 +153,7 @@ const Register = () => {
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
+              onFocus={() => speak(t('select_language') || 'Select your language')}
               className="w-full px-4 py-3.5 bg-card border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all appearance-none"
             >
               <option value="">{t('preferred_language')}</option>
@@ -157,11 +164,12 @@ const Register = () => {
             <button
               type="submit"
               disabled={loading}
+              onFocus={() => speak(t('register'))}
               className="w-full gradient-primary text-primary-foreground font-semibold py-3.5 rounded-xl shadow-elevated hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Creating account...
+                  <Loader2 className="w-4 h-4 animate-spin" /> {t('creating_account') || 'Creating account...'}
                 </>
               ) : (
                 t('register')
@@ -192,7 +200,7 @@ const Register = () => {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
             )}
-            Continue with Google
+            {t('continue_with_google') || 'Continue with Google'}
           </button>
 
           <p className="text-center text-sm text-muted-foreground">

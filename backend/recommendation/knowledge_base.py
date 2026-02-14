@@ -9,11 +9,10 @@ could back this with a Firestore collection or a vector DB.
 """
 
 # ──────────────────────────────────────────────────────────────
-# DISEASE → RECOMMENDATION MAP
-# Keys are the formatted disease names (e.g. "Tomato Early Blight")
+# ENGLISH RECOMMENDATIONS
 # ──────────────────────────────────────────────────────────────
 
-RECOMMENDATIONS = {
+RECOMMENDATIONS_EN = {
     # ── Tomato ──
     'Tomato Early Blight': {
         'fertilizers': [
@@ -377,30 +376,123 @@ RECOMMENDATIONS = {
     },
 }
 
+# ──────────────────────────────────────────────────────────────
+# TAMIL RECOMMENDATIONS (DEMO SUBSET)
+# ──────────────────────────────────────────────────────────────
 
-def get_recommendation(disease_name: str) -> dict | None:
+RECOMMENDATIONS_TA = {
+    # ── Tomato ──
+    'Tomato Early Blight': {
+        'fertilizers': [
+            'பொட்டாசியம் நிறைந்த உரம் (Muriate of Potash)',
+            'கால்சியம் அம்மோனியம் நைட்ரேட்',
+        ],
+        'pesticides': [
+            'மேங்கோசெப் 75% WP – 2.5 g/L',
+            'குளோரோதலனில் 75% WP – 2 g/L',
+            'அசோக்ஸிஸ்ட்ரோபின் 23% SC – 1 ml/L',
+        ],
+        'organic_treatments': [
+            'வேப்ப எண்ணெய் கரைசல் (5 ml/L)',
+            'டிரைக்கோடெர்மா விரிடி மண் பயன்பாடு',
+        ],
+        'preventive_measures': [
+            'பாதிக்கப்பட்ட இலைகளை உடனடியாக அகற்றவும்',
+            'பயிர் சுழற்சி (3 ஆண்டுகள்) மேற்கொள்ளவும்',
+            'காற்றுோட்டத்திற்கு போதிய இடைவெளி விடவும்',
+            'மேல்நிலை நீர்ப்பாசனத்தை தவிர்க்கவும்',
+        ],
+    },
+    'Tomato Late Blight': {
+        'fertilizers': [
+            'பாஸ்பரஸ் நிறைந்த உரம்',
+            'நுண்ணூட்டச் சத்து கலவை (Zn, Mn, Fe)',
+        ],
+        'pesticides': [
+            'மெட்டாலாக்சில் + மேங்கோசெப் – 2.5 g/L',
+            'காப்பர் ஆக்ஸிகுளோரைடு 50% WP – 3 g/L',
+        ],
+        'organic_treatments': [
+            'போர்டோ கலவை (1%)',
+            'சூடோமோனாஸ் ஃப்ளோரசன்ஸ் தெளிப்பு',
+        ],
+        'preventive_measures': [
+            'எதிர்ப்புத் திறன் கொண்ட ரகங்களைப் பயன்படுத்தவும்',
+            'பாதிக்கப்பட்ட செடிகளை அழிக்கவும்',
+            'நல்ல வடிகால் வசதியை உறுதி செய்யவும்',
+        ],
+    },
+    'Tomato Healthy': {
+        'fertilizers': ['பரிந்துரைக்கப்பட்ட NPK (10-26-26) உரங்களைத் தொடரவும்'],
+        'pesticides': ['சிகிச்சை தேவையில்லை - செடி ஆரோக்கியமாக உள்ளது!'],
+        'organic_treatments': ['15 நாட்களுக்கு ஒருமுறை தடுப்பு நடவடிக்கையாக வேப்ப எண்ணெய் தெளிக்கவும்'],
+        'preventive_measures': [
+            'நல்ல விவசாய நடைமுறைகளைத் தொடரவும்',
+            'சரியான நீர்ப்பாசன அட்டவணையைப் பின்பற்றவும்',
+            'தொடர்ந்து வயலை கண்காணிக்கவும்',
+        ],
+    },
+
+    # ── Potato ──
+    'Potato Early Blight': {
+        'fertilizers': ['பொட்டாஷ் நிறைந்த உரம்'],
+        'pesticides': ['மேங்கோசெப் 75% WP – 2.5 g/L'],
+        'organic_treatments': ['டிரைக்கோடெர்மா மண் பயன்பாடு'],
+        'preventive_measures': ['சான்றளிக்கப்பட்ட விதை கிழங்குகளை பயன்படுத்தவும்'],
+    },
+    'Potato Late Blight': {
+        'fertilizers': ['பாஸ்பரஸ் உரம்'],
+        'pesticides': ['மெட்டாலாக்சில் + மேங்கோசெப் – 2.5 g/L'],
+        'organic_treatments': ['போர்டோ கலவை (1%)'],
+        'preventive_measures': ['நோய் எதிர்ப்பு ரகங்களை பயிரிடவும்'],
+    },
+    'Potato Healthy': {
+        'fertilizers': ['NPK அட்டவணையைத் தொடரவும்'],
+        'pesticides': ['சிகிச்சை தேவையில்லை'],
+        'organic_treatments': ['தடுப்பு நடவடிக்கையாக டிரைக்கோடெர்மா இடவும்'],
+        'preventive_measures': ['தொடர்ந்து கண்காணிக்கவும்'],
+    },
+}
+
+
+def get_recommendation(disease_name: str, lang: str = 'en') -> dict | None:
     """
-    Look up treatment recommendations for a given disease name.
+    Look up treatment recommendations with language support.
 
     Args:
-        disease_name: The formatted disease name (e.g., "Tomato Early Blight")
+        disease_name: The formatted disease name.
+        lang: 'en' or 'ta'.
 
     Returns:
-        dict with fertilizers, pesticides, organic_treatments, preventive_measures
-        or None if the disease is not found.
+        Dictionary with treatments or None.
     """
-    # Try exact match first
-    if disease_name in RECOMMENDATIONS:
-        return RECOMMENDATIONS[disease_name]
+    # Select the repository based on language
+    # Default to English if language dict is missing or specific disease is missing in Tamil
+    repo = RECOMMENDATIONS_EN
+    
+    if lang == 'ta':
+        # Check if we have a Tamil translation for this SPECIFIC disease
+        # If not, we will fall back to English logic below (by not switching repo yet? 
+        # or separate lookup).
+        # Better approach: Try Tamil repo first.
+        if disease_name in RECOMMENDATIONS_TA:
+            return RECOMMENDATIONS_TA[disease_name]
+        
+        # Also try case-insensitive in Tamil repo (though keys are standard)
+        for key, value in RECOMMENDATIONS_TA.items():
+            if key.lower() == disease_name.lower():
+                return value
+    
+    # Fallback to English Logic (Exact -> Case Insensitive -> Partial)
+    if disease_name in RECOMMENDATIONS_EN:
+        return RECOMMENDATIONS_EN[disease_name]
 
-    # Try case-insensitive match
     lower_name = disease_name.lower()
-    for key, value in RECOMMENDATIONS.items():
+    for key, value in RECOMMENDATIONS_EN.items():
         if key.lower() == lower_name:
             return value
 
-    # Try partial/fuzzy match
-    for key, value in RECOMMENDATIONS.items():
+    for key, value in RECOMMENDATIONS_EN.items():
         if lower_name in key.lower() or key.lower() in lower_name:
             return value
 
