@@ -30,10 +30,10 @@ export default defineConfig(({ mode }) => ({
         name: "Smart Agri - Disease Detection",
         short_name: "SmartAgri",
         description: "AI-powered crop disease detection & yield prediction app.",
-        theme_color: "#ffffff",
+        theme_color: "#0f291e",
         start_url: "/",
         display: "standalone",
-        background_color: "#ffffff",
+        background_color: "#0f291e",
         icons: [
           {
             src: "pwa-192x192.png",
