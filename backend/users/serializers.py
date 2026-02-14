@@ -1,22 +1,11 @@
-"""
-Users – Serializers
-====================
-Serializers for user profile data stored in Firestore.
-"""
-
 from rest_framework import serializers
+from .models import UserProfile
 
-
-class UserProfileSerializer(serializers.Serializer):
-    """Serialize user profile data from Firestore."""
-    uid = serializers.CharField(read_only=True)
-    email = serializers.EmailField()
-    display_name = serializers.CharField(max_length=150, required=False, default='')
-    phone_number = serializers.CharField(max_length=20, required=False, default='')
-    location = serializers.CharField(max_length=255, required=False, default='')
-    created_at = serializers.DateTimeField(read_only=True)
-    updated_at = serializers.DateTimeField(read_only=True)
-
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['uid', 'email', 'display_name', 'phone_number', 'location', 'language', 'created_at', 'updated_at']
+        read_only_fields = ['uid', 'created_at', 'updated_at']
 
 class UserRegistrationSerializer(serializers.Serializer):
     """Validate registration payload."""
