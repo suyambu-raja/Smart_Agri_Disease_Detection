@@ -204,272 +204,286 @@ const DiseaseDetection = () => {
       )}
 
 
-      <div className="max-w-md mx-auto space-y-6">
+      <div className="max-w-md md:max-w-7xl mx-auto space-y-6">
         <h1 className="text-xl font-bold text-gray-900">{t('disease_detection')}</h1>
 
         {/* MAIN ACTION CARD */}
-        <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-teal-50/50 via-green-50/50 to-transparent pointer-events-none"></div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+          {/* LEFT COLUMN */}
+          <div className="md:col-span-7 lg:col-span-8 space-y-6">
+            <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-teal-50/50 via-green-50/50 to-transparent pointer-events-none"></div>
 
-          <div className="relative z-10">
-            <div className="w-20 h-20 bg-gradient-to-br from-teal-100 to-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Camera className="w-10 h-10 text-[#4a7a40]" />
-            </div>
-
-            <h2 className="text-lg font-bold text-gray-900 mb-4">{t('Take Photo or upload')}</h2>
-
-            {/* Filters */}
-            <div className="mb-6 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
-              <div className="flex gap-2 justify-center min-w-max">
-                {crops.map((crop) => (
-                  <button
-                    key={crop}
-                    onClick={() => {
-                      setSelectedCrop(crop === selectedCrop ? '' : crop);
-                      speak(crop);
-                    }}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${selectedCrop === crop
-                      ? 'bg-gradient-to-r from-teal-400 to-emerald-500 text-white shadow-md shadow-green-500/20 border-none'
-                      : 'bg-white text-gray-700 border border-gray-200 hover:border-green-400'
-                      }`}
-                  >
-                    {t(`crop_${crop.toLowerCase()}`) || crop}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {!preview ? (
-              <div className="space-y-3">
-                {/* Hidden Inputs */}
-                <input type="file" accept="image/*" id="gallery-input" onChange={handleImageUpload} className="hidden" />
-
-                {/* Buttons : Live Camera Trigger */}
-                <button
-                  onClick={startCamera}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-teal-400 to-emerald-500 hover:from-teal-600 hover:to-green-700 text-white font-bold py-3.5 rounded-xl cursor-pointer shadow-lg shadow-green-500/30 active:scale-[0.98] transition-all"
-                >
-                  <Camera className="w-5 h-5" />
-                  {t('take_photo') || 'Take Photo'}
-                </button>
-
-                <label htmlFor="gallery-input" className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-800 font-bold py-3.5 rounded-xl cursor-pointer hover:bg-gray-50 active:scale-[0.98] transition-all">
-                  <Upload className="w-5 h-5 text-gray-600" />
-                  {t('upload_gallery')}
-                </label>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="relative rounded-xl overflow-hidden shadow-md">
-                  <img src={preview} alt="Preview" className="w-full h-48 object-cover" />
-                  <button onClick={clearImage} className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full backdrop-blur-sm">
-                    <X className="w-4 h-4" />
-                  </button>
+              <div className="relative z-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-teal-100 to-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Camera className="w-10 h-10 text-[#4a7a40]" />
                 </div>
 
-                {!result && (
-                  <button
-                    onClick={handlePredict}
-                    disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-teal-400 to-emerald-500 hover:from-teal-600 hover:to-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-500/30 active:scale-[0.98] transition-all"
-                  >
-                    {loading ? <Loader2 className="animate-spin w-5 h-5" /> : t('predict')}
-                  </button>
-                )}
-              </div>
-            )}
+                <h2 className="text-lg font-bold text-gray-900 mb-4">{t('Take Photo or upload')}</h2>
 
-            <p className="text-xs text-gray-500 mt-4 font-semibold">
-              {t('upload_hint') || 'Ensure the leaf is clearly visible and well-lit'}
-            </p>
-          </div>
-        </div>
-
-        {/* TIPS SECTION */}
-        <div className="bg-[#F8FAF9] rounded-[1.5rem] p-6 border border-gray-200">
-          <h3 className="font-bold text-gray-800 mb-4">{t('tips') || 'Tips'}</h3>
-          <ul className="space-y-3">
-            {[
-              'tip_visible',
-              'tip_shadows',
-              'tip_lighting'
-            ].map((tip, i) => (
-              <li key={i} className="flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                <span className="text-sm text-gray-700 font-medium leading-tight">{t(tip) || tip}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* PREDICTION RESULT - DETAILED VIEW */}
-        <AnimatePresence>
-          {result && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="fixed inset-0 z-40 bg-gray-50 overflow-y-auto pb-24"
-            >
-              {/* Header */}
-              <div className="bg-white p-4 shadow-sm flex items-center justify-between sticky top-0 z-10">
-                <button onClick={clearImage} className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full">
-                  <X className="w-6 h-6" />
-                </button>
-                <h2 className="font-bold text-gray-800">Result</h2>
-                <div className="w-8"></div>
-              </div>
-
-              <div className="p-5 max-w-md mx-auto space-y-6">
-                {/* Summary Card */}
-                <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center">
-                  <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 ${result.is_healthy ? 'bg-green-100' : 'bg-red-50'}`}>
-                    {result.is_healthy ? <CheckCircle2 className="w-10 h-10 text-green-600" /> : <AlertCircle className="w-10 h-10 text-red-500" />}
+                {/* Filters */}
+                <div className="mb-6 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
+                  <div className="flex gap-2 justify-center min-w-max">
+                    {crops.map((crop) => (
+                      <button
+                        key={crop}
+                        onClick={() => {
+                          setSelectedCrop(crop === selectedCrop ? '' : crop);
+                          speak(crop);
+                        }}
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${selectedCrop === crop
+                          ? 'bg-gradient-to-r from-teal-400 to-emerald-500 text-white shadow-md shadow-green-500/20 border-none'
+                          : 'bg-white text-gray-700 border border-gray-200 hover:border-green-400'
+                          }`}
+                      >
+                        {t(`crop_${crop.toLowerCase()}`) || crop}
+                      </button>
+                    ))}
                   </div>
-                  <h2 className="text-2xl font-extrabold text-gray-900 leading-tight mb-2">{result.disease_name}</h2>
-                  <div className="flex items-center justify-center gap-3">
-                    <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-lg text-sm font-bold border border-gray-200">
-                      Conf: {Math.round(result.confidence)}%
-                    </span>
-                    {!result.is_healthy && (
-                      <span className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-bold">
-                        Action Needed
-                      </span>
+                </div>
+
+                {!preview ? (
+                  <div className="space-y-3">
+                    {/* Hidden Inputs */}
+                    <input type="file" accept="image/*" id="gallery-input" onChange={handleImageUpload} className="hidden" />
+
+                    {/* Buttons : Live Camera Trigger */}
+                    <button
+                      onClick={startCamera}
+                      className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-teal-400 to-emerald-500 hover:from-teal-600 hover:to-green-700 text-white font-bold py-3.5 rounded-xl cursor-pointer shadow-lg shadow-green-500/30 active:scale-[0.98] transition-all"
+                    >
+                      <Camera className="w-5 h-5" />
+                      {t('take_photo') || 'Take Photo'}
+                    </button>
+
+                    <label htmlFor="gallery-input" className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-800 font-bold py-3.5 rounded-xl cursor-pointer hover:bg-gray-50 active:scale-[0.98] transition-all">
+                      <Upload className="w-5 h-5 text-gray-600" />
+                      {t('upload_gallery')}
+                    </label>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="relative rounded-xl overflow-hidden shadow-md">
+                      <img src={preview} alt="Preview" className="w-full h-48 object-cover" />
+                      <button onClick={clearImage} className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full backdrop-blur-sm">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {!result && (
+                      <button
+                        onClick={handlePredict}
+                        disabled={loading}
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-teal-400 to-emerald-500 hover:from-teal-600 hover:to-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-500/30 active:scale-[0.98] transition-all"
+                      >
+                        {loading ? <Loader2 className="animate-spin w-5 h-5" /> : t('predict')}
+                      </button>
                     )}
                   </div>
-                </div>
-
-                {/* Show Image */}
-                {preview && (
-                  <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-200">
-                    <img src={preview} alt="Analyzed" className="w-full h-48 object-cover" />
-                  </div>
                 )}
 
-                {/* Detailed Recommendations */}
-                {recommendation && !result.is_healthy && (
-                  <div className="space-y-6">
-                    {/* Treatment */}
-                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                      <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg mb-3">
-                        <div className="bg-green-100 p-1.5 rounded-lg"><Sprout className="w-5 h-5 text-green-700" /></div>
-                        {t('treatment')}
-                      </h3>
-                      <div className="space-y-3">
-                        {recommendation.organic_treatments.length > 0 && (
-                          <div>
-                            <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-2">Organic</p>
-                            <ul className="space-y-2">
-                              {recommendation.organic_treatments.map((item, i) => (
-                                <li key={i} className="text-sm text-gray-800 flex gap-2">
-                                  <span className="text-green-500 mt-1">•</span> {item}
-                                </li>
-                              ))}
-                            </ul>
+                <p className="text-xs text-gray-500 mt-4 font-semibold">
+                  {t('upload_hint') || 'Ensure the leaf is clearly visible and well-lit'}
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+
+          {/* RIGHT COLUMN */}
+          <div className="md:col-span-5 lg:col-span-4 space-y-6">
+
+            {/* TIPS SECTION */}
+            <div className="bg-[#F8FAF9] rounded-[1.5rem] p-6 border border-gray-200">
+              <h3 className="font-bold text-gray-800 mb-4">{t('tips') || 'Tips'}</h3>
+              <ul className="space-y-3">
+                {[
+                  'tip_visible',
+                  'tip_shadows',
+                  'tip_lighting'
+                ].map((tip, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                    <span className="text-sm text-gray-700 font-medium leading-tight">{t(tip) || tip}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* PREDICTION RESULT - DETAILED VIEW */}
+            <AnimatePresence>
+              {result && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="fixed inset-0 z-50 bg-gray-50 md:bg-black/60 md:backdrop-blur-sm md:flex md:items-center md:justify-center overflow-y-auto md:overflow-hidden"
+                >
+                  <div className="w-full h-full md:h-auto md:max-h-[90vh] md:max-w-2xl bg-gray-50 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col relative">
+                    {/* Header */}
+                    <div className="bg-white p-4 shadow-sm flex items-center justify-between sticky top-0 z-10">
+                      <button onClick={clearImage} className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full">
+                        <X className="w-6 h-6" />
+                      </button>
+                      <h2 className="font-bold text-gray-800">Result</h2>
+                      <div className="w-8"></div>
+                    </div>
+
+                    <div className="p-5 max-w-md mx-auto space-y-6">
+                      {/* Summary Card */}
+                      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center">
+                        <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 ${result.is_healthy ? 'bg-green-100' : 'bg-red-50'}`}>
+                          {result.is_healthy ? <CheckCircle2 className="w-10 h-10 text-green-600" /> : <AlertCircle className="w-10 h-10 text-red-500" />}
+                        </div>
+                        <h2 className="text-2xl font-extrabold text-gray-900 leading-tight mb-2">{result.disease_name}</h2>
+                        <div className="flex items-center justify-center gap-3">
+                          <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-lg text-sm font-bold border border-gray-200">
+                            Conf: {Math.round(result.confidence)}%
+                          </span>
+                          {!result.is_healthy && (
+                            <span className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-bold">
+                              Action Needed
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Show Image */}
+                      {preview && (
+                        <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-200">
+                          <img src={preview} alt="Analyzed" className="w-full h-48 object-cover" />
+                        </div>
+                      )}
+
+                      {/* Detailed Recommendations */}
+                      {recommendation && !result.is_healthy && (
+                        <div className="space-y-6">
+                          {/* Treatment */}
+                          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                            <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg mb-3">
+                              <div className="bg-green-100 p-1.5 rounded-lg"><Sprout className="w-5 h-5 text-green-700" /></div>
+                              {t('treatment')}
+                            </h3>
+                            <div className="space-y-3">
+                              {recommendation.organic_treatments.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-2">Organic</p>
+                                  <ul className="space-y-2">
+                                    {recommendation.organic_treatments.map((item, i) => (
+                                      <li key={i} className="text-sm text-gray-800 flex gap-2">
+                                        <span className="text-green-500 mt-1">•</span> {item}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              {recommendation.pesticides && recommendation.pesticides.length > 0 && (
+                                <div className="pt-2 border-t border-gray-100 mt-2">
+                                  <p className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-2 mt-2">Chemical</p>
+                                  <ul className="space-y-2">
+                                    {recommendation.pesticides.map((item, i) => (
+                                      <li key={i} className="text-sm text-gray-800 flex gap-2">
+                                        <span className="text-orange-500 mt-1">•</span> {item}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
-                        {recommendation.pesticides && recommendation.pesticides.length > 0 && (
-                          <div className="pt-2 border-t border-gray-100 mt-2">
-                            <p className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-2 mt-2">Chemical</p>
-                            <ul className="space-y-2">
-                              {recommendation.pesticides.map((item, i) => (
-                                <li key={i} className="text-sm text-gray-800 flex gap-2">
-                                  <span className="text-orange-500 mt-1">•</span> {item}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+
+                          {/* Prevention */}
+                          {recommendation.preventive_measures.length > 0 && (
+                            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                              <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg mb-3">
+                                <div className="bg-blue-100 p-1.5 rounded-lg"><ShieldCheck className="w-5 h-5 text-blue-700" /></div>
+                                {t('prevention')}
+                              </h3>
+                              <ul className="space-y-2">
+                                {recommendation.preventive_measures.map((item, i) => (
+                                  <li key={i} className="text-sm text-gray-800 flex gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                                    {item}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Fertilizers */}
+                          {recommendation.fertilizers.length > 0 && (
+                            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                              <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg mb-3">
+                                <div className="bg-purple-100 p-1.5 rounded-lg"><Beaker className="w-5 h-5 text-purple-700" /></div>
+                                {t('fertilizers')}
+                              </h3>
+                              <ul className="space-y-2">
+                                {recommendation.fertilizers.map((item, i) => (
+                                  <li key={i} className="text-sm text-gray-800 flex gap-2">
+                                    <span className="text-purple-500 mt-1">•</span> {item}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {result.is_healthy && (
+                        <div className="bg-white p-8 rounded-3xl text-center shadow-sm border border-green-100">
+                          <p className="text-lg text-gray-700 font-medium">Your plant looks healthy! Keep up the good work.</p>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={clearImage}
+                        className="w-full py-4 bg-gradient-to-r from-teal-400 to-emerald-500 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-500/30 active:scale-[0.98] transition-all"
+                      >
+                        {t('done')}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* LAST PREDICTION */}
+            {lastPrediction && !result && !preview && (
+              <div
+                onClick={() => navigate('/history')}
+                className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all active:scale-[0.98]"
+              >
+                <h3 className="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">{t('last_prediction') || 'Last Prediction'}</h3>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 border-2 ${lastPrediction.is_healthy ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+                      {lastPrediction.image_url ? (
+                        <img src={lastPrediction.image_url} className="w-full h-full object-cover rounded-full" alt="" />
+                      ) : (
+                        <Sprout className={`w-6 h-6 ${lastPrediction.is_healthy ? 'text-green-600' : 'text-red-500'}`} />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900 text-base">{lastPrediction.disease_name}</h4>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-xs text-gray-600 font-semibold">{t('confidence')}: <span className="text-gray-900">{lastPrediction.confidence}%</span></span>
+                        {!lastPrediction.is_healthy && (
+                          <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">High Risk</span>
                         )}
                       </div>
                     </div>
-
-                    {/* Prevention */}
-                    {recommendation.preventive_measures.length > 0 && (
-                      <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                        <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg mb-3">
-                          <div className="bg-blue-100 p-1.5 rounded-lg"><ShieldCheck className="w-5 h-5 text-blue-700" /></div>
-                          {t('prevention')}
-                        </h3>
-                        <ul className="space-y-2">
-                          {recommendation.preventive_measures.map((item, i) => (
-                            <li key={i} className="text-sm text-gray-800 flex gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Fertilizers */}
-                    {recommendation.fertilizers.length > 0 && (
-                      <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                        <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg mb-3">
-                          <div className="bg-purple-100 p-1.5 rounded-lg"><Beaker className="w-5 h-5 text-purple-700" /></div>
-                          {t('fertilizers')}
-                        </h3>
-                        <ul className="space-y-2">
-                          {recommendation.fertilizers.map((item, i) => (
-                            <li key={i} className="text-sm text-gray-800 flex gap-2">
-                              <span className="text-purple-500 mt-1">•</span> {item}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </div>
-                )}
-
-                {result.is_healthy && (
-                  <div className="bg-white p-8 rounded-3xl text-center shadow-sm border border-green-100">
-                    <p className="text-lg text-gray-700 font-medium">Your plant looks healthy! Keep up the good work.</p>
-                  </div>
-                )}
-
-                <button
-                  onClick={clearImage}
-                  className="w-full py-4 bg-gradient-to-r from-teal-400 to-emerald-500 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-500/30 active:scale-[0.98] transition-all"
-                >
-                  {t('done')}
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* LAST PREDICTION */}
-        {lastPrediction && !result && !preview && (
-          <div
-            onClick={() => navigate('/history')}
-            className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all active:scale-[0.98]"
-          >
-            <h3 className="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">{t('last_prediction') || 'Last Prediction'}</h3>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 border-2 ${lastPrediction.is_healthy ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
-                  {lastPrediction.image_url ? (
-                    <img src={lastPrediction.image_url} className="w-full h-full object-cover rounded-full" alt="" />
-                  ) : (
-                    <Sprout className={`w-6 h-6 ${lastPrediction.is_healthy ? 'text-green-600' : 'text-red-500'}`} />
-                  )}
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900 text-base">{lastPrediction.disease_name}</h4>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-xs text-gray-600 font-semibold">{t('confidence')}: <span className="text-gray-900">{lastPrediction.confidence}%</span></span>
-                    {!lastPrediction.is_healthy && (
-                      <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">High Risk</span>
-                    )}
-                  </div>
+                  <ChevronRight className="text-gray-400 w-5 h-5" />
                 </div>
               </div>
-              <ChevronRight className="text-gray-400 w-5 h-5" />
-            </div>
+            )}
+
           </div>
-        )}
-
+        </div>
       </div>
-    </div>
+    </div >
   );
 };
 
