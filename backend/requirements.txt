@@ -27,3 +27,8 @@ whitenoise>=6.5,<7.0
 # Utilities
 requests>=2.31,<3.0
 openai>=1.12.0,<2.0
+
+# Database (Postgres support for Render)
+dj-database-url>=2.1.0,<3.0
+psycopg2-binary>=2.9.9,<3.0
+

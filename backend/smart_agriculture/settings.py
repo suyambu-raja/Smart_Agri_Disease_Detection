@@ -13,6 +13,7 @@ Production-ready configuration with:
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 # ──────────────────────────────────────────
 # 1. BASE DIRECTORY & ENV
@@ -36,7 +37,7 @@ DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = [
     h.strip()
-    for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com').split(',')
 ]
 
 # ──────────────────────────────────────────
@@ -133,6 +134,10 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Render Deployment: Use dj_database_url logic if DATABASE_URL is set
+db_from_env = dj_database_url.config(conn_max_age=600)
+DATABASES['default'].update(db_from_env)
 
 # ──────────────────────────────────────────
 # 7. PASSWORD VALIDATORS
