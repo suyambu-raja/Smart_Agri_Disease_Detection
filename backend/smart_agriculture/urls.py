@@ -28,6 +28,7 @@ urlpatterns = [
     # Health check (no auth required)
     path('', health_check, name='health-check'),
     path('health/', health_check, name='health-check-alt'),
+    path('api/health/', health_check, name='health-check-api'),
 
     # ── Swagger / OpenAPI Docs ──
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
