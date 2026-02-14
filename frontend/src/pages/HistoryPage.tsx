@@ -9,7 +9,6 @@ type TabType = 'disease' | 'yield';
 const HistoryPage = () => {
   const { t } = useTranslation();
   const [tab, setTab] = useState<TabType>('disease');
-  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +17,6 @@ const HistoryPage = () => {
 
   // Selected item for detail view
   const [selectedDisease, setSelectedDisease] = useState<DiseaseHistoryItem | null>(null);
-  const [selectedYield, setSelectedYield] = useState<YieldHistoryItem | null>(null);
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -35,12 +33,8 @@ const HistoryPage = () => {
       if (yieldRes.status === 'fulfilled') {
         setYieldHistory(yieldRes.value.data || []);
       }
-
-      if (diseaseRes.status === 'rejected' && yieldRes.status === 'rejected') {
-        setError('Failed to load history. Please make sure you are logged in.');
-      }
     } catch (err: any) {
-      setError(err.message || 'Failed to load history.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -53,69 +47,48 @@ const HistoryPage = () => {
   const formatDate = (dateStr: string) => {
     try {
       const date = new Date(dateStr);
-      return date.toLocaleDateString('en-IN', {
-        day: 'numeric',
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
         month: 'short',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        hour12: true
       });
     } catch {
       return dateStr;
     }
   };
 
-  const filteredDisease = diseaseHistory.filter((item) =>
-    item.disease_name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const filteredYield = yieldHistory.filter((item) =>
-    item.crop.toLowerCase().includes(search.toLowerCase()) ||
-    item.district.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const riskBadge = (risk: string) => {
-    const colors = {
-      'Low': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      'Medium': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      'High': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    };
-    return colors[risk as keyof typeof colors] || colors['Medium'];
-  };
-
   return (
-    <div className="min-h-screen bg-background pb-20 relative">
-      <div className="p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-foreground">{t('history')}</h1>
-          <button
-            onClick={fetchHistory}
-            disabled={loading}
-            className="p-2 rounded-lg bg-secondary text-muted-foreground hover:text-primary transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
+    <div className="min-h-screen bg-gray-100/50 pb-24 font-sans relative">
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search history..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-xl text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
+      {/* 1. Header Background Image Section */}
+      <div className="relative w-full h-64 rounded-b-[2rem] overflow-hidden shadow-lg">
+        <img
+          src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2832&auto=format&fit=crop"
+          alt="Agriculture Background"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/60"></div>
+
+        {/* Title positioned over the image */}
+        <div className="absolute top-8 left-6 z-10">
+          <h1 className="text-3xl font-bold text-white drop-shadow-md tracking-tight">{t('history')}</h1>
+          <p className="text-white/80 text-sm mt-1 font-medium">Track your farm's health and yield over time</p>
         </div>
+      </div>
+
+      {/* 2. Main Content Container - Floating upwards */}
+      <div className="px-5 -mt-20 relative z-20">
 
         {/* Tabs */}
-        <div className="flex gap-2">
+        <div className="bg-white/90 backdrop-blur-md p-1.5 rounded-2xl shadow-xl flex gap-2 mb-6 border border-white/50">
           <button
             onClick={() => setTab('disease')}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all ${tab === 'disease'
-              ? 'gradient-primary text-primary-foreground shadow-elevated'
-              : 'bg-card text-muted-foreground border border-border'
+            className={`flex-1 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${tab === 'disease'
+              ? 'bg-gradient-to-r from-teal-400 to-emerald-500 text-white shadow-lg shadow-green-500/20'
+              : 'bg-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             <Leaf className="w-4 h-4" />
@@ -123,9 +96,9 @@ const HistoryPage = () => {
           </button>
           <button
             onClick={() => setTab('yield')}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all ${tab === 'yield'
-              ? 'gradient-primary text-primary-foreground shadow-elevated'
-              : 'bg-card text-muted-foreground border border-border'
+            className={`flex-1 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${tab === 'yield'
+              ? 'bg-gradient-to-r from-teal-400 to-emerald-500 text-white shadow-lg shadow-green-500/20'
+              : 'bg-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             <BarChart3 className="w-4 h-4" />
@@ -133,92 +106,106 @@ const HistoryPage = () => {
           </button>
         </div>
 
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          </div>
-        )}
+        {/* Section Title */}
+        <h3 className="font-bold text-gray-800 text-lg mb-4 pl-1 flex items-center justify-between">
+          {tab === 'disease' ? 'Disease Reports' : 'Yield Predictions'}
+          <span className="text-xs font-normal text-gray-400 bg-white px-2 py-1 rounded-lg border border-gray-100">Sorted by Date</span>
+        </h3>
 
-        {!loading && (
-          <AnimatePresence mode="wait">
-            {tab === 'disease' ? (
-              <motion.div
-                key="disease"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                className="space-y-3"
-              >
-                {filteredDisease.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Leaf className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-40" />
-                    <p className="text-muted-foreground text-sm">
-                      {search ? t('no_results') : t('no_disease_history')}
-                    </p>
-                    <p className="text-muted-foreground text-xs mt-1">
-                      {t('go_detect_msg')}
-                    </p>
+        {loading ? (
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-green-600 w-8 h-8" /></div>
+        ) : (
+          <div className="space-y-4 pb-10">
+            <AnimatePresence mode="wait">
+              {tab === 'disease' ? (
+                diseaseHistory.length === 0 ? (
+                  <div className="text-center py-16 bg-white rounded-3xl border border-gray-100 shadow-sm">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Leaf className="text-gray-300 w-8 h-8" />
+                    </div>
+                    <p className="text-gray-500 font-medium">No disease history yet.</p>
+                    <button className="mt-4 text-sm font-bold text-green-600 hover:underline">Start Detection</button>
                   </div>
                 ) : (
-                  filteredDisease.map((item) => (
+                  diseaseHistory.map((item) => (
                     <motion.div
                       key={item.id}
                       layoutId={`card-${item.id}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
                       onClick={() => setSelectedDisease(item)}
-                      className="bg-card rounded-xl shadow-card p-4 border border-border cursor-pointer active:scale-[0.98] transition-transform"
+                      className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all hover:shadow-md group"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          {item.is_healthy ? (
-                            <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                              <Leaf className="w-4 h-4 text-green-600 dark:text-green-300" />
-                            </div>
+                      <div className="flex items-center gap-4">
+                        {/* Icon Circle */}
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${item.is_healthy ? 'bg-green-50 group-hover:bg-green-100' : 'bg-red-50 group-hover:bg-red-100'}`}>
+                          {item.image_url ? (
+                            <img src={item.image_url} alt="" className="w-full h-full object-cover rounded-2xl" />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
-                              <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-300" />
-                            </div>
+                            item.is_healthy ? <Leaf className="text-green-600 w-6 h-6" /> : <AlertTriangle className="text-red-500 w-6 h-6" />
                           )}
-                          <div>
-                            <p className="font-semibold text-foreground text-sm">{item.disease_name}</p>
-                            <p className="text-xs text-muted-foreground">{t('confidence')}: {item.confidence}%</p>
+                        </div>
+
+                        <div>
+                          <h4 className="font-bold text-gray-900 text-base leading-tight mb-1">
+                            {item.disease_name}
+                          </h4>
+
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider ${item.is_healthy ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                              {item.is_healthy ? 'Healthy' : 'Risk'}
+                            </span>
+                            <span className="text-xs text-gray-400 font-medium flex items-center gap-1">
+                              <Calendar className="w-3 h-3" /> {formatDate(item.created_at)}
+                            </span>
                           </div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Calendar className="w-3 h-3" />
-                        {formatDate(item.created_at)}
+
+                      <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-gray-100 transition-colors">
+                        <ChevronRight className="text-gray-400 w-4 h-4" />
                       </div>
                     </motion.div>
                   ))
-                )}
-              </motion.div>
-            ) : (
-              <motion.div key="yield" className="space-y-3">
-                {filteredYield.length === 0 ? (
-                  <div className="text-center py-12">
-                    <BarChart3 className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-40" />
-                    <p className="text-muted-foreground text-sm">
-                      {search ? t('no_results') : t('no_yield_history')}
-                    </p>
-                    <p className="text-muted-foreground text-xs mt-1">
-                      {t('go_yield_msg')}
-                    </p>
+                )
+              ) : (
+                yieldHistory.length === 0 ? (
+                  <div className="text-center py-16 bg-white rounded-3xl border border-gray-100 shadow-sm">
+                    <p className="text-gray-500 font-medium">No yield predictions found.</p>
                   </div>
                 ) : (
-                  filteredYield.map((item) => (
-                    <div key={item.id} className="bg-card rounded-xl p-4 border border-border">
-                      <div className="flex justify-between items-center">
-                        <p className="font-bold">{item.crop}</p>
-                        <span className={`px-2 py-0.5 rounded text-xs ${riskBadge(item.risk_level)}`}>{item.risk_level}</span>
+                  yieldHistory.map((item) => (
+                    <div key={item.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                            <Sprout className="text-blue-600 w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-gray-900">{item.crop}</h4>
+                            <p className="text-xs text-gray-500">{item.district}</p>
+                          </div>
+                        </div>
+                        <span className={`text-[10px] px-2 py-1 rounded-full font-bold border ${item.risk_level === 'Low' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-yellow-50 text-yellow-700 border-yellow-100'
+                          }`}>
+                          {item.risk_level} Risk
+                        </span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">{t('predicted_yield')}: {item.predicted_yield} {item.unit}</p>
+
+                      <div className="flex items-end gap-2 mt-4 bg-gray-50 p-3 rounded-xl border border-gray-100 border-dashed">
+                        <div>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Estimated Yield</p>
+                          <p className="text-lg font-extrabold text-gray-900 leading-none">
+                            {item.predicted_yield} <span className="text-xs font-bold text-gray-500">{item.unit}</span>
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   ))
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                )
+              )}
+            </AnimatePresence>
+          </div>
         )}
       </div>
 
@@ -235,70 +222,52 @@ const HistoryPage = () => {
             />
             <motion.div
               layoutId={`card-${selectedDisease.id}`}
-              className="fixed inset-x-4 top-[10%] bottom-[10%] md:inset-[20%] z-50 bg-card rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col"
+              className="fixed inset-x-4 top-[15%] bottom-[15%] md:inset-y-12 md:max-w-md md:mx-auto z-50 bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col"
             >
-              <div className="relative h-48 sm:h-64 bg-secondary flex items-center justify-center overflow-hidden">
+              <div className="relative h-72 bg-gray-100 shrink-0">
                 {selectedDisease.image_url ? (
-                  <img
-                    src={selectedDisease.image_url}
-                    alt={selectedDisease.disease_name}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={selectedDisease.image_url} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="text-center text-muted-foreground">
-                    <ImageOff className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                    <p className="text-xs">{t('no_image')}</p>
+                  <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                    <ImageOff className="text-gray-300 w-12 h-12" />
                   </div>
                 )}
+
                 <button
-                  onClick={(e) => { e.stopPropagation(); setSelectedDisease(null); }}
-                  className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 backdrop-blur-sm"
+                  onClick={() => setSelectedDisease(null)}
+                  className="absolute top-4 right-4 p-2 bg-black/30 hover:bg-black/50 text-white rounded-full backdrop-blur-md transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
+
+                <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+                  <h2 className="text-2xl font-bold text-white leading-tight">{selectedDisease.disease_name}</h2>
+                  <p className="text-white/80 text-sm font-medium">{formatDate(selectedDisease.created_at)}</p>
+                </div>
               </div>
 
               <div className="p-6 flex-1 overflow-y-auto">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-foreground leading-tight mb-1">
-                      {selectedDisease.disease_name}
-                    </h2>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Calendar className="w-3 h-3" />
-                      {formatDate(selectedDisease.created_at)}
-                    </p>
+                <div className="bg-gray-50 p-5 rounded-2xl mb-6 border border-gray-100">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Confidence Level</span>
+                    <span className="text-lg font-black text-gray-900">{selectedDisease.confidence}%</span>
                   </div>
-                  <div className={`px-3 py-1 rounded-full text-xs font-bold ${selectedDisease.is_healthy ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {selectedDisease.is_healthy ? t('healthy') : t('diseased')}
+                  <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${selectedDisease.confidence}%` }}
+                      transition={{ duration: 1, delay: 0.2 }}
+                      className={`h-full rounded-full ${selectedDisease.is_healthy ? 'bg-green-500' : 'bg-gradient-to-r from-orange-400 to-red-500'}`}
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="bg-secondary/30 p-4 rounded-xl">
-                    <p className="text-sm font-medium mb-2">{t('ai_confidence')}</p>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 flex-1 bg-secondary rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${selectedDisease.confidence > 80 ? 'bg-primary' : 'bg-yellow-500'}`}
-                          style={{ width: `${selectedDisease.confidence}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-bold">{selectedDisease.confidence}%</span>
-                    </div>
-                  </div>
-
-                  {!selectedDisease.is_healthy && (
-                    <div className="p-4 border border-border rounded-xl bg-card">
-                      <h3 className="font-semibold mb-2 flex items-center gap-2">
-                        <Sprout className="w-4 h-4 text-primary" />
-                        {t('treatment')}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {t('view_treatment_msg')}
-                      </p>
-                    </div>
-                  )}
+                  <h3 className="font-bold text-gray-900 border-l-4 border-green-500 pl-3">Analysis Details</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Based on the image analysis, the system has detected {selectedDisease.is_healthy ? 'no signs of disease' : `signs of ${selectedDisease.disease_name}`}.
+                    {selectedDisease.is_healthy && " The plant appears to be in good health."}
+                  </p>
                 </div>
               </div>
             </motion.div>

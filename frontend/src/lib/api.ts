@@ -125,9 +125,9 @@ export async function getDiseaseHistory(): Promise<{ success: boolean; data: Dis
 /**
  * Get treatment recommendations for a detected disease.
  */
-export async function getRecommendation(diseaseName: string): Promise<RecommendationResult> {
+export async function getRecommendation(diseaseName: string, lang: string = 'en'): Promise<RecommendationResult> {
     const encoded = encodeURIComponent(diseaseName);
-    return apiFetch<RecommendationResult>(`/recommendation/?disease_name=${encoded}`);
+    return apiFetch<RecommendationResult>(`/recommendation/?disease_name=${encoded}&lang=${lang}`);
 }
 
 /**

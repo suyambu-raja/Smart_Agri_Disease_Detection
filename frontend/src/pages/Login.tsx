@@ -110,7 +110,7 @@ const Login = () => {
                 placeholder={t('email')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onFocus={() => speak(t('email'))}
+                onFocus={() => speak(t('enter_your_email') || 'Enter your email')}
                 className="w-full pl-11 pr-4 py-3.5 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
             </div>
@@ -121,7 +121,7 @@ const Login = () => {
                 placeholder={t('password')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onFocus={() => speak(t('password'))}
+                onFocus={() => speak(t('enter_your_password') || 'Enter your password')}
                 className="w-full pl-11 pr-11 py-3.5 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
               <button
@@ -141,7 +141,7 @@ const Login = () => {
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Signing in...
+                  <Loader2 className="w-4 h-4 animate-spin" /> {t('signing_in') || 'Signing in...'}
                 </>
               ) : (
                 t('login')
@@ -172,7 +172,7 @@ const Login = () => {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
             )}
-            Continue with Google
+            {t('continue_with_google') || 'Continue with Google'}
           </button>
 
           <div className="text-center space-y-3">

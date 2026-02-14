@@ -113,8 +113,8 @@ const YieldPrediction = () => {
               <select
                 value={district}
                 onChange={(e) => setDistrict(e.target.value)}
-                onFocus={() => speak(t('district'))}
-                className="w-full px-3 py-3 bg-background border border-border rounded-xl text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
+                onFocus={() => speak(t('select_district') || 'Select district')}
+                className="w-full px-3 py-3 bg-background border border-border rounded-xl text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 appearance-none"
               >
                 {DISTRICTS.map((d) => <option key={d} value={d}>{t(`district_${d.toLowerCase()}`)}</option>)}
               </select>
@@ -124,8 +124,8 @@ const YieldPrediction = () => {
               <select
                 value={soilType}
                 onChange={(e) => setSoilType(e.target.value)}
-                onFocus={() => speak(t('soil_type'))}
-                className="w-full px-3 py-3 bg-background border border-border rounded-xl text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
+                onFocus={() => speak(t('select_soil_type') || 'Select soil type')}
+                className="w-full px-3 py-3 bg-background border border-border rounded-xl text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 appearance-none"
               >
                 {SOIL_TYPES.map((s) => {
                   // Clean string for key: "Red Soil" -> "soil_red"
@@ -139,8 +139,8 @@ const YieldPrediction = () => {
               <select
                 value={crop}
                 onChange={(e) => setCrop(e.target.value)}
-                onFocus={() => speak(t('crop_type'))}
-                className="w-full px-3 py-3 bg-background border border-border rounded-xl text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
+                onFocus={() => speak(t('select_crop_type') || 'Select crop type')}
+                className="w-full px-3 py-3 bg-background border border-border rounded-xl text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 appearance-none"
               >
                 {CROPS.map((c) => <option key={c} value={c}>{t(`crop_${c.toLowerCase()}`)}</option>)}
               </select>
@@ -151,8 +151,8 @@ const YieldPrediction = () => {
                 type="number"
                 value={rainfall}
                 onChange={(e) => setRainfall(Number(e.target.value))}
-                onFocus={() => speak(t('rainfall_mm'))}
-                className="w-full px-3 py-3 bg-background border border-border rounded-xl text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                onFocus={() => speak(t('enter_rainfall') || 'Enter rainfall')}
+                className="w-full px-3 py-3 bg-background border border-border rounded-xl text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
               />
             </div>
           </div>
@@ -163,8 +163,8 @@ const YieldPrediction = () => {
                 type="number"
                 value={temperature}
                 onChange={(e) => setTemperature(Number(e.target.value))}
-                onFocus={() => speak(t('temperature_c'))}
-                className="w-full px-3 py-3 bg-background border border-border rounded-xl text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                onFocus={() => speak(t('enter_temperature') || 'Enter temperature')}
+                className="w-full px-3 py-3 bg-background border border-border rounded-xl text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
               />
             </div>
             <div>
@@ -173,8 +173,8 @@ const YieldPrediction = () => {
                 type="number"
                 value={landArea}
                 onChange={(e) => setLandArea(Number(e.target.value))}
-                onFocus={() => speak(t('land_area'))}
-                className="w-full px-3 py-3 bg-background border border-border rounded-xl text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                onFocus={() => speak(t('enter_land_area') || 'Enter land area')}
+                className="w-full px-3 py-3 bg-background border border-border rounded-xl text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
               />
             </div>
           </div>
@@ -190,7 +190,7 @@ const YieldPrediction = () => {
             type="submit"
             disabled={loading}
             onFocus={() => speak(t('predict'))}
-            className="w-full gradient-primary text-primary-foreground font-semibold py-3.5 rounded-xl shadow-elevated disabled:opacity-60 flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-teal-400 to-emerald-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-500/30 disabled:opacity-60 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
           >
             {loading ? (
               <>
@@ -246,7 +246,13 @@ const YieldPrediction = () => {
                     <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(120,10%,45%)" />
                     <YAxis tick={{ fontSize: 11 }} stroke="hsl(120,10%,45%)" />
                     <Tooltip />
-                    <Bar dataKey="yield" fill="hsl(125, 55%, 33%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="yield" fill="url(#yieldGradient)" radius={[4, 4, 0, 0]} />
+                    <defs>
+                      <linearGradient id="yieldGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#0ea5e9" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#22c55e" stopOpacity={0.8} />
+                      </linearGradient>
+                    </defs>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
