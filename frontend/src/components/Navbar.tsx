@@ -85,13 +85,15 @@ const Navbar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors ${isActive
-                      ? 'text-primary'
-                      : 'text-muted-foreground hover:text-foreground'
+                  className={`flex flex-col items-center justify-center gap-1 py-1 rounded-lg transition-colors flex-1 min-w-0 ${isActive
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
-                  <item.icon className={`w-5 h-5 ${isActive ? 'text-primary' : ''}`} />
-                  <span className="text-[10px] font-medium leading-none">{item.label}</span>
+                  <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-primary' : ''}`} />
+                  <span className="text-[10px] font-medium leading-tight text-center h-[32px] flex items-center justify-center w-full line-clamp-2 px-0.5">
+                    {item.label}
+                  </span>
                 </Link>
               );
             })}
