@@ -40,6 +40,13 @@ ALLOWED_HOSTS = [
     for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com').split(',')
 ]
 
+# Render SSL/HTTPS Configuration
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 # ──────────────────────────────────────────
 # 3. INSTALLED APPS
 # ──────────────────────────────────────────
