@@ -8,7 +8,8 @@
 
 import { auth } from '@/lib/firebase';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const ENV_API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = ENV_API_URL.endsWith('/') ? ENV_API_URL.slice(0, -1) : ENV_API_URL;
 
 // ──────────────────────────────────────────
 // Get current user's Firebase ID token
@@ -191,6 +192,5 @@ export async function getYieldHistory(): Promise<{ success: boolean; data: Yield
 // ──────────────────────────────────────────
 
 export async function healthCheck(): Promise<{ status: string; service: string; version: string }> {
-    const res = await fetch('/');
-    return res.json();
+    return apiFetch('/health/', {}, false);
 }
