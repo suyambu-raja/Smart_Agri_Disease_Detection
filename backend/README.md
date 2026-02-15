@@ -1,3 +1,13 @@
+---
+title: Smart Agriculture Disease Detection
+emoji: 🌿
+colorFrom: green
+colorTo: yellow
+sdk: docker
+app_port: 8080
+pinned: false
+---
+
 # Smart Agriculture – Crop Disease & Yield Prediction System
 
 A production-ready Django REST Framework backend for agricultural disease detection, yield prediction, and treatment recommendations.
