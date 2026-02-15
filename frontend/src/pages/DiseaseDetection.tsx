@@ -305,7 +305,7 @@ const DiseaseDetection = () => {
                       <div className="w-8"></div>
                     </div>
 
-                    <div className="p-5 max-w-md mx-auto space-y-6">
+                    <div className="p-5 max-w-md mx-auto space-y-6 flex-1 overflow-y-auto w-full">
                       {/* Summary Card */}
                       <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center">
                         <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 ${result.is_healthy ? 'bg-green-100' : 'bg-red-50'}`}>
