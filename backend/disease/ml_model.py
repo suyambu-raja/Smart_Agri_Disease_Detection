@@ -26,7 +26,9 @@ _using_mock = False
 # Update this list to match your training labels
 # ──────────────────────────────────────────
 
-CLASS_LABELS = [
+# Default fallback labels (if file missing)
+# 48 classes: original PlantVillage (38) + Rice (4) + Wheat (4) + Onion (2)
+DEFAULT_CLASS_LABELS = [
     'Apple___Apple_scab',
     'Apple___Black_rot',
     'Apple___Cedar_apple_rust',
@@ -42,6 +44,8 @@ CLASS_LABELS = [
     'Grape___Esca_(Black_Measles)',
     'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)',
     'Grape___healthy',
+    'Onion___Purple_blotch',
+    'Onion___healthy',
     'Orange___Haunglongbing_(Citrus_greening)',
     'Peach___Bacterial_spot',
     'Peach___healthy',
@@ -51,6 +55,10 @@ CLASS_LABELS = [
     'Potato___Late_blight',
     'Potato___healthy',
     'Raspberry___healthy',
+    'Rice___Brown_spot',
+    'Rice___Hispa',
+    'Rice___Leaf_blast',
+    'Rice___healthy',
     'Soybean___healthy',
     'Squash___Powdery_mildew',
     'Strawberry___Leaf_scorch',
@@ -65,7 +73,32 @@ CLASS_LABELS = [
     'Tomato___Tomato_Yellow_Leaf_Curl_Virus',
     'Tomato___Tomato_mosaic_virus',
     'Tomato___healthy',
+    'Wheat___Brown_rust',
+    'Wheat___Septoria',
+    'Wheat___Yellow_rust',
+    'Wheat___healthy',
 ]
+
+def get_class_labels():
+    """Load class labels from file or return default."""
+    labels_path = os.path.join(settings.BASE_DIR, 'models', 'class_labels.txt')
+    if os.path.exists(labels_path):
+        try:
+            labels = {}
+            with open(labels_path, 'r') as f:
+                for line in f:
+                    parts = line.strip().split(':', 1)
+                    if len(parts) == 2:
+                        idx = int(parts[0].strip())
+                        label = parts[1].strip()
+                        labels[idx] = label
+            return [labels[i] for i in sorted(labels.keys())]
+        except Exception as e:
+            logger.error(f"Error reading class_labels.txt: {e}")
+    
+    return DEFAULT_CLASS_LABELS
+
+CLASS_LABELS = get_class_labels()
 
 
 def _format_label(raw_label: str) -> str:
@@ -139,7 +172,22 @@ def predict_disease(image_array: np.ndarray, crop_filter: str = None) -> dict:
         }
 
     # Real model inference
-    predictions = model.predict(image_array, verbose=0)[0]  # shape (38,)
+    # Use MobileNetV2 preprocessing: scale [0,255] to [-1, 1]
+    # If input is already [0, 1] (from /255.0 in views.py), convert back to [0, 255] first
+    if np.max(image_array) <= 1.0:
+        image_array = image_array * 255.0
+    
+    import tensorflow as tf
+    image_array = tf.keras.applications.mobilenet_v2.preprocess_input(image_array)
+
+    predictions = model.predict(image_array, verbose=0)[0]  # shape (N,)
+
+    # Log top 3 for debugging
+    top_3_indices = np.argsort(predictions)[-3:][::-1]
+    logger.info(f"Top 3 predictions:")
+    for i in top_3_indices:
+        if i < len(CLASS_LABELS):
+            logger.info(f"  {CLASS_LABELS[i]}: {predictions[i]*100:.2f}%")
 
     # Apply crop filter if provided
     if crop_filter:
@@ -150,7 +198,10 @@ def predict_disease(image_array: np.ndarray, crop_filter: str = None) -> dict:
             if label.lower().startswith(crop_filter) or 
                (crop_filter == 'corn' and 'corn_(maize)' in label.lower()) or
                (crop_filter == 'cherry' and 'cherry_(including_sour)' in label.lower()) or
-               (crop_filter == 'pepper' and 'pepper,_bell' in label.lower())
+               (crop_filter == 'pepper' and 'pepper,_bell' in label.lower()) or
+               (crop_filter == 'rice' and label.lower().startswith('rice')) or
+               (crop_filter == 'wheat' and label.lower().startswith('wheat')) or
+               (crop_filter == 'onion' and label.lower().startswith('onion'))
         ]
 
         if valid_indices:
@@ -168,6 +219,12 @@ def predict_disease(image_array: np.ndarray, crop_filter: str = None) -> dict:
                 pass
 
     predicted_idx = int(np.argmax(predictions))
+    
+    # Final check for index bounds
+    if predicted_idx >= len(CLASS_LABELS):
+        logger.error(f"Predicted index {predicted_idx} out of bounds (Labels: {len(CLASS_LABELS)})")
+        predicted_idx = 0
+        
     confidence = float(np.max(predictions) * 100)
     raw_label = CLASS_LABELS[predicted_idx]
 

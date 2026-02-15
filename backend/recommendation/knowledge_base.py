@@ -374,6 +374,71 @@ RECOMMENDATIONS_EN = {
         'organic_treatments': ['Bio-fertilizer application'],
         'preventive_measures': ['Seed treatment before sowing'],
     },
+    # ── Rice ──
+    'Rice Brown Spot': {
+        'fertilizers': ['Apply Potash and Silicon fertilizers'],
+        'pesticides': ['Mancozeb 2g/L or Carbendazim 1g/L'],
+        'organic_treatments': ['Pseudomonas fluorescens seed treatment'],
+        'preventive_measures': ['Use disease-free seeds', 'Hot water treatment (52°C for 10 min)'],
+    },
+    'Rice Leaf Blast': {
+        'fertilizers': ['Avoid excessive Nitrogen'],
+        'pesticides': ['Tricyclazole 75 WP @ 0.6g/L', 'Isoprothiolane 40 EC @ 1.5 ml/L'],
+        'organic_treatments': ['Pseudomonas fluorescens spray @ 10g/L'],
+        'preventive_measures': ['Plant resistant varieties', 'Burn infected straw/stubble'],
+    },
+    'Rice Hispa': {
+        'fertilizers': ['Avoid excessive Nitrogen'],
+        'pesticides': ['Chlorpyriphos 20 EC @ 2.5ml/L', 'Quinalphos 25 EC @ 2ml/L'],
+        'organic_treatments': ['Release egg parasitoids (Trichogramma)'],
+        'preventive_measures': ['Clip leaf tips of seedlings before transplanting', 'Sweep netting to catch beetles'],
+    },
+    'Rice Healthy': {
+        'fertilizers': ['Recommended NPK schedule'],
+        'pesticides': ['None needed'],
+        'organic_treatments': ['Azospirillum/Phosphobacteria biofertilizers'],
+        'preventive_measures': ['Regular water management'],
+    },
+
+    # ── Wheat ──
+    'Wheat Yellow Rust': {
+        'fertilizers': ['Balanced fertilization'],
+        'pesticides': ['Propiconazole 25 EC @ 1ml/L', 'Tebuconazole 250 EC @ 1ml/L'],
+        'organic_treatments': ['Neem oil spray'],
+        'preventive_measures': ['Grow resistant varieties', 'Timely sowing'],
+    },
+    'Wheat Septoria': {
+        'fertilizers': ['Ensure adequate Potassium'],
+        'pesticides': ['Azoxystrobin or Epoxiconazole fungicides'],
+        'organic_treatments': ['Crop rotation with non-cereal crops'],
+        'preventive_measures': ['Destruction of crop residues', 'Avoid dense sowing'],
+    },
+    'Wheat Brown Rust': {
+        'fertilizers': ['Balanced NPK'],
+        'pesticides': ['Mancozeb 75 WP @ 2g/L', 'Propiconazole 25 EC'],
+        'organic_treatments': ['Bio-control agents'],
+        'preventive_measures': ['Remove alternate hosts (Thalictrum spp.)', 'Resistant varieties'],
+    },
+    'Wheat Healthy': {
+        'fertilizers': ['Standard recommendation'],
+        'pesticides': ['None needed'],
+        'organic_treatments': ['Biofertilizers'],
+        'preventive_measures': ['Clean cultivation'],
+    },
+
+    # ── Onion ──
+    'Onion Purple Blotch': {
+        'fertilizers': ['Calcium and Potash sidedressing'],
+        'pesticides': ['Mancozeb @ 2.5g/L', 'Chlorothalonil @ 2g/L'],
+        'organic_treatments': ['Trichoderma viride @ 4g/kg seed'],
+        'preventive_measures': ['Use healthy bulbs', 'Good drainage', 'Crop rotation'],
+    },
+    'Onion Healthy': {
+        'fertilizers': ['Sulphur-containing fertilizers for pungency'],
+        'pesticides': ['None'],
+        'organic_treatments': ['Neem cake application'],
+        'preventive_measures': ['Harvesting at proper maturity'],
+    },
 }
 
 # ──────────────────────────────────────────────────────────────
