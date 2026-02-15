@@ -8,8 +8,14 @@
 
 import { auth } from '@/lib/firebase';
 
+// In development: Vite proxy forwards /api → http://127.0.0.1:8000/api
+// In production (Netlify): VITE_API_URL = https://suyambu08-smart-agri-backend.hf.space/api
 const ENV_API_URL = import.meta.env.VITE_API_URL || '/api';
 const API_BASE = ENV_API_URL.endsWith('/') ? ENV_API_URL.slice(0, -1) : ENV_API_URL;
+
+if (import.meta.env.DEV) {
+    console.log('[API] Base URL:', API_BASE);
+}
 
 // ──────────────────────────────────────────
 // Get current user's Firebase ID token
