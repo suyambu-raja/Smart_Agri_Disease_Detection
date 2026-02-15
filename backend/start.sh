@@ -2,9 +2,12 @@
 set -e
 
 # Write Firebase credentials from Environment Variable (if set)
+# Use Python to handle newlines correctly and avoid shell escaping issues
 if [ -n "$FIREBASE_CREDENTIALS_JSON" ]; then
-    echo "Writing firebase_credentials.json from environment variable..."
-    echo "$FIREBASE_CREDENTIALS_JSON" > /app/firebase_credentials.json
+    echo "Found FIREBASE_CREDENTIALS_JSON env var. Writing to file..."
+    python -c "import os; open('/app/firebase_credentials.json', 'w').write(os.environ.get('FIREBASE_CREDENTIALS_JSON', ''))"
+else
+    echo "WARNING: FIREBASE_CREDENTIALS_JSON environment variable is NOT set!"
 fi
 
 # Run collectstatic to ensure static files are ready
