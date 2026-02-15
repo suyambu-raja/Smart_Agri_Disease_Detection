@@ -21,6 +21,9 @@ _model = None
 _model_loaded = False
 _using_mock = False
 
+# Gatekeeper (ImageNet)
+_gatekeeper_model = None
+
 # ──────────────────────────────────────────
 # Class labels — index matches model output
 # Update this list to match your training labels
@@ -106,6 +109,10 @@ def _format_label(raw_label: str) -> str:
     return raw_label.replace('___', ' ').replace('_', ' ').title()
 
 
+# ----------------------------------------------------------------------
+# models
+# ----------------------------------------------------------------------
+
 def get_disease_model():
     """
     Return the cached TensorFlow/Keras model (singleton).
@@ -128,16 +135,13 @@ def get_disease_model():
             logger.info(f"Disease model loaded from {model_path}")
             return _model, _using_mock
         except ImportError:
-            logger.warning(
-                "TensorFlow is not installed. Using mock predictor. "
-                "Install TF with: pip install tensorflow"
-            )
+            logger.warning("TensorFlow is not installed. Using mock predictor.")
         except Exception as e:
             logger.error(f"Error loading disease model: {e}")
     else:
         logger.warning(f"Disease model file not found at {model_path}")
 
-    # Fallback: mock model for dev/testing
+    # Fallback: mock model
     _model = None
     _model_loaded = True
     _using_mock = True
@@ -145,92 +149,156 @@ def get_disease_model():
     return _model, _using_mock
 
 
+def get_gatekeeper_model():
+    """Lazy-load the standard MobileNetV2 (ImageNet) for content verification."""
+    global _gatekeeper_model
+    if _gatekeeper_model is None:
+        try:
+            logger.info("Loading Gatekeeper (MobileNetV2/ImageNet)...")
+            from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2
+            _gatekeeper_model = MobileNetV2(weights='imagenet', include_top=True)
+        except Exception as e:
+            logger.error(f"Failed to load Gatekeeper: {e}")
+            return None
+    return _gatekeeper_model
+
+
+def check_is_plant(image_array: np.ndarray) -> tuple:
+    """
+    Verifies if the image contains plant/agricultural content.
+    Returns (is_valid, description).
+    """
+    gk = get_gatekeeper_model()
+    if not gk:
+        return True, "Check Skipped"
+
+    try:
+        from tensorflow.keras.applications.mobilenet_v2 import decode_predictions
+        preds = gk.predict(image_array, verbose=0)
+        decoded = decode_predictions(preds, top=3)[0] # List of (id, label, prob)
+        
+        # Valid keywords
+        VALID = {
+            'plant', 'leaf', 'flower', 'fruit', 'vegetable', 'tree', 'grass', 
+            'agriculture', 'garden', 'crop', 'corn', 'wheat', 'rice', 'onion', 
+            'potato', 'tomato', 'pepper', 'apple', 'grape', 'orange', 
+            'strawberry', 'peach', 'cherry', 'blueberry', 'raspberry', 
+            'soybean', 'squash', 'lettuce', 'cabbage', 'broccoli', 
+            'produce', 'food', 'pot', 'farm', 'greenhouse', 'mushroom',
+            'pod', 'seed', 'grain', 'root', 'tuber'
+        }
+        
+        matches = []
+        for _, label, prob in decoded:
+            label_lower = label.lower()
+            if any(k in label_lower for k in VALID):
+                matches.append(label)
+        
+        if matches:
+            return True, matches[0]
+            
+        # If no match, return top prediction
+        top_label = decoded[0][1]
+        return False, top_label
+
+    except Exception as e:
+        logger.error(f"Gatekeeper check error: {e}")
+        return True, "Error"
+
+
 def predict_disease(image_array: np.ndarray, crop_filter: str = None) -> dict:
     """
     Run inference on a preprocessed image array (1, 224, 224, 3).
-    If crop_filter is provided (e.g., 'Tomato'), it masks irrelevant classes.
+    Includes Gatekeeper & Confidence checks.
     """
     model, using_mock = get_disease_model()
 
     if using_mock:
-        # Mock logic
+        # Mock logic (same as before)
         found = False
+        mock_idx = 29
         if crop_filter:
             for i, label in enumerate(CLASS_LABELS):
                 if crop_filter.lower() in label.lower():
                     mock_idx = i
                     found = True
                     break
-        if not found:
-            mock_idx = 29  # Tomato___Early_blight default
-
+        raw_label = CLASS_LABELS[mock_idx]
         return {
-            'disease_name': _format_label(CLASS_LABELS[mock_idx]),
-            'confidence': round(85.50, 2),
-            'is_healthy': False,
-            'raw_label': CLASS_LABELS[mock_idx],
+            'success': True,
+            'disease_name': _format_label(raw_label),
+            'confidence': 85.50,
+            'is_healthy': 'healthy' in raw_label.lower(),
+            'raw_label': raw_label,
         }
 
-    # Real model inference
-    # Use MobileNetV2 preprocessing: scale [0,255] to [-1, 1]
-    # If input is already [0, 1] (from /255.0 in views.py), convert back to [0, 255] first
+    # Real Inference
+    # Ensure input is [-1, 1] for MobileNetV2
     if np.max(image_array) <= 1.0:
-        image_array = image_array * 255.0
+        image_array = image_array * 255.0 # Scale to [0, 255] first
     
     import tensorflow as tf
+    # This scales [0, 255] -> [-1, 1]
     image_array = tf.keras.applications.mobilenet_v2.preprocess_input(image_array)
 
-    predictions = model.predict(image_array, verbose=0)[0]  # shape (N,)
+    # 1. Gatekeeper Check
+    is_plant, content_desc = check_is_plant(image_array)
+    if not is_plant:
+        return {
+            'success': False,
+            'disease_name': "Invalid data",
+            'confidence': 0.0,
+            'is_healthy': False,
+            'error': f"Image appears to be '{content_desc.replace('_', ' ')}', not a crop leaf.",
+            'raw_label': 'invalid_content'
+        }
 
-    # Log top 3 for debugging
-    top_3_indices = np.argsort(predictions)[-3:][::-1]
-    logger.info(f"Top 3 predictions:")
-    for i in top_3_indices:
-        if i < len(CLASS_LABELS):
-            logger.info(f"  {CLASS_LABELS[i]}: {predictions[i]*100:.2f}%")
-
-    # Apply crop filter if provided
-    if crop_filter:
-        crop_filter = crop_filter.lower()
-        # Find indices that match the crop
-        valid_indices = [
-            i for i, label in enumerate(CLASS_LABELS) 
-            if label.lower().startswith(crop_filter) or 
-               (crop_filter == 'corn' and 'corn_(maize)' in label.lower()) or
-               (crop_filter == 'cherry' and 'cherry_(including_sour)' in label.lower()) or
-               (crop_filter == 'pepper' and 'pepper,_bell' in label.lower()) or
-               (crop_filter == 'rice' and label.lower().startswith('rice')) or
-               (crop_filter == 'wheat' and label.lower().startswith('wheat')) or
-               (crop_filter == 'onion' and label.lower().startswith('onion'))
-        ]
-
-        if valid_indices:
-            # Mask out invalid indices (set to 0)
-            masked_preds = np.zeros_like(predictions)
-            for i in valid_indices:
-                masked_preds[i] = predictions[i]
-            
-            # Re-normalize so they sum to 1
-            total = np.sum(masked_preds)
-            if total > 0:
-                predictions = masked_preds / total
-            else:
-                # If everything was zeroed (shouldn't happen), fallback to original
-                pass
-
-    predicted_idx = int(np.argmax(predictions))
-    
-    # Final check for index bounds
-    if predicted_idx >= len(CLASS_LABELS):
-        logger.error(f"Predicted index {predicted_idx} out of bounds (Labels: {len(CLASS_LABELS)})")
-        predicted_idx = 0
+    # 2. Disease Prediction
+    try:
+        predictions = model.predict(image_array, verbose=0)[0]
         
-    confidence = float(np.max(predictions) * 100)
-    raw_label = CLASS_LABELS[predicted_idx]
+        # Apply crop filter logic (simplified)
+        if crop_filter:
+            valid_indices = [
+                i for i, label in enumerate(CLASS_LABELS) 
+                if label.lower().startswith(crop_filter.lower()) or 
+                   (crop_filter.lower() == 'corn' and 'corn' in label.lower()) or
+                   (crop_filter.lower() == 'cherry' and 'cherry' in label.lower())
+            ]
+            if valid_indices:
+                mask = np.zeros_like(predictions)
+                mask[valid_indices] = 1.0
+                predictions = predictions * mask
+        
+        pred_idx = int(np.argmax(predictions))
+        confidence = float(np.max(predictions) * 100)
+        raw_label = CLASS_LABELS[pred_idx]
 
-    return {
-        'disease_name': _format_label(raw_label),
-        'confidence': round(confidence, 2),
-        'is_healthy': 'healthy' in raw_label.lower(),
-        'raw_label': raw_label,
-    }
+        # 3. Confidence Threshold (Unsupported Crop Check)
+        if confidence < 45.0:
+            return {
+                'success': False,
+                'disease_name': "Crop Not Trained",
+                'confidence': round(confidence, 2),
+                'is_healthy': False,
+                'error': f"Low confidence ({round(confidence, 1)}%). This crop looks unsupported.",
+                'raw_label': raw_label
+            }
+
+        return {
+            'success': True, 
+            'disease_name': _format_label(raw_label),
+            'confidence': round(confidence, 2),
+            'is_healthy': 'healthy' in raw_label.lower(),
+            'raw_label': raw_label,
+        }
+
+    except Exception as e:
+        logger.error(f"Prediction error: {e}")
+        return {
+            'success': False,
+            'disease_name': "Error",
+            'confidence': 0.0,
+            'is_healthy': False,
+            'error': str(e)
+        }

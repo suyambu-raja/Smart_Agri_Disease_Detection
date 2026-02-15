@@ -239,7 +239,7 @@ const DiseaseDetection = () => {
                 ) : (
                   <div className="space-y-4">
                     <div className="relative rounded-xl overflow-hidden shadow-md">
-                      <img src={preview} alt="Preview" className="w-full h-48 object-cover" />
+                      <img src={preview} alt="Preview" className="w-full h-48 md:h-96 lg:h-[28rem] object-contain bg-gray-50" />
                       <button onClick={clearImage} className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full backdrop-blur-sm">
                         <X className="w-4 h-4" />
                       </button>
@@ -322,12 +322,18 @@ const DiseaseDetection = () => {
                             </span>
                           )}
                         </div>
+                        {result.error && (
+                          <div className="mt-4 bg-red-50 text-red-700 px-4 py-3 rounded-xl text-sm font-medium border border-red-100 flex items-start gap-2 text-left">
+                            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                            <span>{result.error}</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Show Image */}
                       {preview && (
                         <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-200">
-                          <img src={preview} alt="Analyzed" className="w-full h-48 object-cover" />
+                          <img src={preview} alt="Analyzed" className="w-full h-48 md:h-80 object-contain bg-gray-50" />
                         </div>
                       )}
 
