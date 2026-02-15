@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "VITE_API_URL=https://suyambu08-smart-agri-backend.hf.space/api npm run build"
   publish = "dist"
 
 [build.environment]
