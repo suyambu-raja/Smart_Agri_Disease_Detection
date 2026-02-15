@@ -153,10 +153,13 @@ def get_gatekeeper_model():
     """Lazy-load the standard MobileNetV2 (ImageNet) for content verification."""
     global _gatekeeper_model
 
-    # SMART DEFAULT: 
-    # - On Render: Disable by default (save 200MB RAM)
-    # - On Localhost: Enable by default (better UX)
+    # SMART DEFAULT MEMORY MANAGEMENT:
+    # 1. RENDER (Free Tier 512MB RAM): DISABLE to prevent crashes.
+    # 2. LOCALHOST / HUGGING FACE / CLOUD RUN (2GB+ RAM): ENABLE for better security.
+    
     is_render = os.getenv('RENDER', 'False').lower() in ('true', '1', 'yes')
+    
+    # Default: Enable everywhere EXCEPT Render
     default_state = 'False' if is_render else 'True'
     
     # Allow explicit override via ENABLE_GATEKEEPER env var
