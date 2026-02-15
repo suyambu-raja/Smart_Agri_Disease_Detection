@@ -33,8 +33,7 @@ staticfiles/
 media/
 
 # ML Models (too large for git)
-models/*.h5
-models/*.pkl
+
 
 # OS
 .DS_Store
@@ -42,3 +41,5 @@ Thumbs.db
 
 # Logs
 *.log
+
+models/*.pkl
