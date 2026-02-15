@@ -68,6 +68,17 @@ def get_yield_model():
 
     model_path = settings.YIELD_MODEL_PATH
 
+    if os.path.exists(model_path + '.gz'):
+        try:
+            # Joblib automatically handles .gz decompression
+            _model = joblib.load(model_path + '.gz')
+            _model_loaded = True
+            _using_mock = False
+            logger.info(f"Yield model loaded from {model_path}.gz")
+            return _model, _using_mock
+        except Exception as e:
+            logger.error(f"Error loading compressed yield model: {e}")
+
     if os.path.exists(model_path):
         try:
             _model = joblib.load(model_path)
