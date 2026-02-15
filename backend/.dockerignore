@@ -1,0 +1,40 @@
+# Ignore git files
+.git/
+.gitignore
+
+# Ignore environment variables (Cloud Run sets these securely)
+.env
+.env.*
+
+# Ignore Python cache & compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore virtual environments
+venv/
+venv312/
+env/
+ENV/
+
+# Ignore database (should use cloud database)
+*.sqlite3
+db.sqlite3
+
+# Ignore large data files (if any remain)
+data/
+backend/data/
+
+# Ignore static collection output (will be regenerated)
+staticfiles/
+
+# Keep models (We need them!)
+# But ignore the large uncompressed one just in case
+backend/models/yield_model.pkl
+models/yield_model.pkl
+
+# Build artifacts
+dist/
+build/
+coverage/
+htmlcov/
