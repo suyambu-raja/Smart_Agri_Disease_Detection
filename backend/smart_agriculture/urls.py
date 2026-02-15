@@ -18,10 +18,12 @@ from drf_spectacular.views import (
 
 def health_check(request):
     """Simple health-check endpoint for load balancers / uptime monitors."""
+    from .firebase_init import _init_error
     return JsonResponse({
         'status': 'healthy',
         'service': 'Smart Agriculture API',
         'version': '1.0.0',
+        'auth_init_error': _init_error,
     })
 
 

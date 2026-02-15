@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────
 
 _firestore_client = None
+_init_error = None
 
 
 def get_firebase_app():
@@ -44,6 +45,8 @@ def get_firebase_app():
             firebase_admin.initialize_app(cred)
             logger.info("Firebase Admin SDK initialized successfully.")
         except Exception as e:
+            global _init_error
+            _init_error = str(e)
             logger.error(f"Failed to initialize Firebase: {e}")
             # Don't raise in dev to avoid crashing if minor config issue
             # raise 
