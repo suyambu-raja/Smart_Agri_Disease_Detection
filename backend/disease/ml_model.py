@@ -152,6 +152,12 @@ def get_disease_model():
 def get_gatekeeper_model():
     """Lazy-load the standard MobileNetV2 (ImageNet) for content verification."""
     global _gatekeeper_model
+
+    # Allow disabling via env var to save memory (e.g. on Render Free Tier)
+    if os.getenv('SKIP_GATEKEEPER', 'False').lower() in ('true', '1', 'yes'):
+        logger.info("Gatekeeper (MobileNetV2) skipped via SKIP_GATEKEEPER env var.")
+        return None
+
     if _gatekeeper_model is None:
         try:
             logger.info("Loading Gatekeeper (MobileNetV2/ImageNet)...")

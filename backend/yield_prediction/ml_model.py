@@ -66,31 +66,52 @@ def get_yield_model():
     if _model_loaded:
         return _model, _using_mock
 
-    model_path = settings.YIELD_MODEL_PATH
+    if os.getenv('SKIP_YIELD_MODEL', 'False').lower() in ('true', '1', 'yes'):
+        logger.info("Yield model skipped via SKIP_YIELD_MODEL env var.")
+        _model = None
+        _model_loaded = True
+        _using_mock = True
+        return _model, _using_mock
 
-    if os.path.exists(model_path + '.gz'):
+    model_path = settings.YIELD_MODEL_PATH
+    compressed_path = model_path + '.gz'
+
+    # 1. Decompress if needed (to enable mmap)
+    if not os.path.exists(model_path) and os.path.exists(compressed_path):
         try:
-            # Joblib automatically handles .gz decompression
-            _model = joblib.load(model_path + '.gz')
+            logger.info(f"Decompressing {compressed_path} to disk for mmap...")
+            import gzip
+            import shutil
+            with gzip.open(compressed_path, 'rb') as f_in:
+                with open(model_path, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+        except Exception as e:
+            logger.warning(f"Could not decompress model to disk (RAM usage might be high): {e}")
+
+    # 2. Try loading uncompressed with mmap (Low RAM)
+    if os.path.exists(model_path):
+        try:
+            _model = joblib.load(model_path, mmap_mode='r')
             _model_loaded = True
             _using_mock = False
-            logger.info(f"Yield model loaded from {model_path}.gz")
+            logger.info(f"Yield model loaded from {model_path} (mmap_mode='r')")
+            return _model, _using_mock
+        except Exception as e:
+            logger.error(f"Error loading yield model (mmap): {e}")
+
+    # 3. Fallback: Load directly from compressed file (High RAM)
+    if os.path.exists(compressed_path):
+        try:
+            _model = joblib.load(compressed_path)
+            _model_loaded = True
+            _using_mock = False
+            logger.info(f"Yield model loaded from {compressed_path} (High RAM mode)")
             return _model, _using_mock
         except Exception as e:
             logger.error(f"Error loading compressed yield model: {e}")
 
-    if os.path.exists(model_path):
-        try:
-            _model = joblib.load(model_path)
-            _model_loaded = True
-            _using_mock = False
-            logger.info(f"Yield model loaded from {model_path}")
-            return _model, _using_mock
-        except Exception as e:
-            logger.error(f"Error loading yield model: {e}")
-
-    # Fallback mock
-    logger.warning(f"Yield model not found at {model_path}. Using rule-based estimator.")
+    # 4. Fallback: Rule-based Mock
+    logger.warning(f"Yield model not found. Using rule-based estimator.")
     _model = None
     _model_loaded = True
     _using_mock = True
