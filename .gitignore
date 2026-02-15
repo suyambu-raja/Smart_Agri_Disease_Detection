@@ -46,6 +46,9 @@ data/
 # INCLUDE the trained models (Critical for deployment!)
 !backend/models/
 !models/
+# Re-exclude large uncompressed models (use .gz instead)
+backend/models/*.pkl
+!backend/models/*.pkl.gz
 
 # ----------------------------------------------------------------------
 # 4. BUILD OUTPUTS
