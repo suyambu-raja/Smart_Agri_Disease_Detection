@@ -91,21 +91,25 @@ def get_yield_model():
     # 2. Try loading uncompressed with mmap (Low RAM)
     if os.path.exists(model_path):
         try:
+            import gc
             _model = joblib.load(model_path, mmap_mode='r')
             _model_loaded = True
             _using_mock = False
             logger.info(f"Yield model loaded from {model_path} (mmap_mode='r')")
+            gc.collect() # Force cleanup of temporary objects
             return _model, _using_mock
         except Exception as e:
             logger.error(f"Error loading yield model (mmap): {e}")
 
-    # 3. Fallback: Load directly from compressed file (High RAM)
+    # 3. Fallback: Load directly from compressed file (High RAM but works if mmap fails)
     if os.path.exists(compressed_path):
         try:
+            import gc
             _model = joblib.load(compressed_path)
             _model_loaded = True
             _using_mock = False
             logger.info(f"Yield model loaded from {compressed_path} (High RAM mode)")
+            gc.collect() # Force cleanup
             return _model, _using_mock
         except Exception as e:
             logger.error(f"Error loading compressed yield model: {e}")
