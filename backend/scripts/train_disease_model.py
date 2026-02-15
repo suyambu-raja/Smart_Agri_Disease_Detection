@@ -71,8 +71,10 @@ def main():
     BATCH_SIZE = args.batch_size
 
     # Training augmentation
+    # NOTE: MobileNetV2 expects inputs[-1, 1]. 
+    # We use the built-in preprocess_input function instead of rescale=1./255
     train_datagen = ImageDataGenerator(
-        rescale=1.0 / 255,
+        preprocessing_function=tf.keras.applications.mobilenet_v2.preprocess_input,
         rotation_range=30,
         width_shift_range=0.2,
         height_shift_range=0.2,
@@ -80,7 +82,7 @@ def main():
         zoom_range=0.2,
         horizontal_flip=True,
         fill_mode='nearest',
-        validation_split=0.2,  # 80/20 split
+        validation_split=0.2,
     )
 
     print(f"\nLoading data from: {args.data_dir}")

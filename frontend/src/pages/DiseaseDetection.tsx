@@ -26,13 +26,7 @@ const DiseaseDetection = () => {
   // Camera UI state
   const [isCameraOpen, setIsCameraOpen] = useState(false);
 
-  // Crop filtering state
-  const [selectedCrop, setSelectedCrop] = useState<string>('');
-  const crops = [
-    'Apple', 'Blueberry', 'Cherry', 'Corn', 'Grape', 'Orange',
-    'Peach', 'Pepper', 'Potato', 'Raspberry', 'Soybean',
-    'Squash', 'Strawberry', 'Tomato'
-  ];
+
 
   // Fetch recommendation whenever result or language changes
   useEffect(() => {
@@ -128,7 +122,7 @@ const DiseaseDetection = () => {
     setResult(null);
     setRecommendation(null);
     setError(null);
-    setSelectedCrop('');
+
   };
 
   const handlePredict = async () => {
@@ -137,7 +131,7 @@ const DiseaseDetection = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await predictDisease(image, selectedCrop || undefined);
+      const data = await predictDisease(image);
       setResult(data);
 
       if (!data.success) {
@@ -221,26 +215,7 @@ const DiseaseDetection = () => {
 
                 <h2 className="text-lg font-bold text-gray-900 mb-4">{t('Take Photo or upload')}</h2>
 
-                {/* Filters */}
-                <div className="mb-6 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
-                  <div className="flex gap-2 justify-center min-w-max">
-                    {crops.map((crop) => (
-                      <button
-                        key={crop}
-                        onClick={() => {
-                          setSelectedCrop(crop === selectedCrop ? '' : crop);
-                          speak(crop);
-                        }}
-                        className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${selectedCrop === crop
-                          ? 'bg-gradient-to-r from-teal-400 to-emerald-500 text-white shadow-md shadow-green-500/20 border-none'
-                          : 'bg-white text-gray-700 border border-gray-200 hover:border-green-400'
-                          }`}
-                      >
-                        {t(`crop_${crop.toLowerCase()}`) || crop}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                {/* Filters Removed - Model Auto-Detects Crop */}
 
                 {!preview ? (
                   <div className="space-y-3">

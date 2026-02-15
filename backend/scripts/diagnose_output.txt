@@ -1,0 +1,88 @@
+﻿.\venv312\Scripts\python : 
+WARNING:root:No 
+DATABASE_URL environment 
+variable set, and so no 
+databases setup
+At line:1 char:1
++ .\venv312\Scripts\python 
+scripts\diagnose_model.py 
+2>&1 | Out-File -E ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~
+    + CategoryInfo          
+    : NotSpecified: (WARNI  
+  NG:root:No...databases    
+ setup:String) [], Remot    
+eException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+[2026-02-14 23:43:31,554] 
+WARNING absl Compiled the 
+loaded model, but the 
+compiled metrics have yet 
+to be built. 
+`model.compile_metrics` 
+will be empty until you 
+train or evaluate the model.
+============================================================
+MODEL DIAGNOSTICS
+============================================================
+Model output shape: (None, 38)
+Number of output neurons: 38
+Number of CLASS_LABELS in backend: 38
+
+MISMATCH CHECK: Model outputs 38 classes, Backend expects 38 classes
+Traceback (most recent call 
+last):
+  File "C:\Real Projects\sma
+rt_agri\backend\scripts\diag
+nose_model.py", line 33, in 
+<module>
+    print("  \u2713 Match 
+OK")
+  File "C:\Real Projects\sma
+rt_agri\backend\venv312\Lib\
+site-packages\colorama\ansit
+owin32.py", line 47, in 
+write
+    
+self.__convertor.write(text)
+  File "C:\Real Projects\sma
+rt_agri\backend\venv312\Lib\
+site-packages\colorama\ansit
+owin32.py", line 177, in 
+write
+    
+self.write_and_convert(text)
+  File "C:\Real Projects\sma
+rt_agri\backend\venv312\Lib\
+site-packages\colorama\ansit
+owin32.py", line 205, in 
+write_and_convert
+    
+self.write_plain_text(text, 
+cursor, len(text))
+  File "C:\Real Projects\sma
+rt_agri\backend\venv312\Lib\
+site-packages\colorama\ansit
+owin32.py", line 210, in 
+write_plain_text
+    self.wrapped.write(text[
+start:end])
+  File "C:\Users\asuya\AppDa
+ta\Local\Programs\Python\Pyt
+hon312\Lib\encodings\cp1252.
+py", line 19, in encode
+    return codecs.charmap_en
+code(input,self.errors,encod
+ing_table)[0]
+           ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^
+UnicodeEncodeError: 
+'charmap' codec can't 
+encode character '\u2713' 
+in position 2: character 
+maps to <undefined>
