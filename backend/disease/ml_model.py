@@ -169,6 +169,35 @@ def get_gatekeeper_model():
     return _gatekeeper_model
 
 
+def _is_valid_leaf_image(image_array: np.ndarray) -> tuple:
+    """
+    Lightweight pre-check to detect obviously invalid images BEFORE running
+    the disease model. Only rejects clearly invalid inputs (blank, solid color).
+    """
+    img = image_array[0]  # Remove batch dimension: (224, 224, 3)
+    
+    # 1. Color Variance Check
+    channel_stds = [np.std(img[:, :, c]) for c in range(3)]
+    avg_std = np.mean(channel_stds)
+    
+    if avg_std < 0.02:
+        return False, "Image appears to be a solid color or blank"
+    
+    # 2. Edge Density Check
+    gray = np.mean(img, axis=2)
+    dx = np.abs(np.diff(gray, axis=1))
+    dy = np.abs(np.diff(gray, axis=0))
+    edge_density = (np.mean(dx) + np.mean(dy)) / 2
+    
+    if edge_density < 0.003:
+        return False, "Image has no visible texture or detail"
+    
+    if avg_std < 0.05 and edge_density < 0.01:
+        return False, "Image does not appear to contain a photograph"
+    
+    return True, "Image looks valid"
+
+
 def check_is_plant(image_array: np.ndarray) -> tuple:
     """
     Verifies if the image contains plant/agricultural content.
@@ -181,46 +210,59 @@ def check_is_plant(image_array: np.ndarray) -> tuple:
     try:
         from tensorflow.keras.applications.mobilenet_v2 import decode_predictions
         preds = gk.predict(image_array, verbose=0)
-        decoded = decode_predictions(preds, top=3)[0] # List of (id, label, prob)
-        
-        # Valid keywords
+        decoded = decode_predictions(preds, top=5)[0]
+
         VALID = {
-            'plant', 'leaf', 'flower', 'fruit', 'vegetable', 'tree', 'grass', 
-            'agriculture', 'garden', 'crop', 'corn', 'wheat', 'rice', 'onion', 
-            'potato', 'tomato', 'pepper', 'apple', 'grape', 'orange', 
-            'strawberry', 'peach', 'cherry', 'blueberry', 'raspberry', 
-            'soybean', 'squash', 'lettuce', 'cabbage', 'broccoli', 
-            'produce', 'food', 'pot', 'farm', 'greenhouse', 'mushroom',
-            'pod', 'seed', 'grain', 'root', 'tuber'
+            'daisy', 'flower', 'rose', 'plant', 'leaf', 'tree', 'grass',
+            'corn', 'ear', 'lemon', 'orange', 'apple', 'fig', 'pineapple',
+            'banana', 'jackfruit', 'strawberry', 'peach', 'cherry', 'blueberry', 'raspberry', 
+            'soybean', 'squash', 'lettuce', 'cabbage', 'broccoli', 'acorn', 'bell_pepper',
+            'produce', 'food', 'pot', 'farm', 'greenhouse', 'mushroom', 'vine', 'stinkhorn',
+            'pod', 'seed', 'grain', 'root', 'tuber', 'hay', 'rapeseed', 'cucumber', 'vegetable'
         }
-        
+
         matches = []
         for _, label, prob in decoded:
             label_lower = label.lower()
+            # If the image net label contains an agricultural related word
             if any(k in label_lower for k in VALID):
                 matches.append(label)
-        
+
         if matches:
             return True, matches[0]
-            
-        # If no match, return top prediction
+
+        # Not a plant -> Returns the top prediction to tell user what they submitted
         top_label = decoded[0][1]
+        logger.info(f"Gatekeeper failed. Image top hit: {top_label}")
         return False, top_label
 
     except Exception as e:
         logger.error(f"Gatekeeper check error: {e}")
-        return True, "Error"
+        return True, "Error resolving gatekeeper format"
+
+
+def _compute_entropy(probabilities: np.ndarray) -> float:
+    """
+    Compute prediction entropy (uncertainty measure).
+    - Low entropy (~0.0): Model is very confident in one class → trustworthy
+    - High entropy (>2.0): Probability is spread across many classes → untrustworthy
+    For 48 classes, max entropy = ln(48) ≈ 3.87
+    """
+    probs = np.clip(probabilities, 1e-10, 1.0)
+    return float(-np.sum(probs * np.log(probs)))
 
 
 def predict_disease(image_array: np.ndarray, crop_filter: str = None) -> dict:
     """
-    Run inference on a preprocessed image array (1, 224, 224, 3).
-    Includes Gatekeeper & Confidence checks.
+    Run inference on a preprocessed image array (1, 224, 224, 3) where values are [0, 1].
+    Three-stage validation:
+    1. Image pre-check: reject obviously invalid inputs (blank/solid)
+    2. Gatekeeper Object detection to reject non-plant completely
+    3. Disease model prediction + Entropy analysis
     """
     model, using_mock = get_disease_model()
 
     if using_mock:
-        # Mock logic (same as before)
         found = False
         mock_idx = 29
         if crop_filter:
@@ -236,34 +278,61 @@ def predict_disease(image_array: np.ndarray, crop_filter: str = None) -> dict:
             'confidence': 85.50,
             'is_healthy': 'healthy' in raw_label.lower(),
             'raw_label': raw_label,
+            'error_type': None,
         }
 
-    # Real Inference
-    # Ensure input is [-1, 1] for MobileNetV2
+    # ──────────────────────────────────────────
+    # Stage 1: Fast Image Pre-Check (Blank image etc)
+    # ──────────────────────────────────────────
+    is_valid, reason = _is_valid_leaf_image(image_array)
+    if not is_valid:
+        logger.info(f"Image pre-check REJECTED: {reason}")
+        return {
+            'success': False,
+            'disease_name': "Invalid Image",
+            'confidence': 0.0,
+            'is_healthy': False,
+            'error_type': 'invalid_image',
+            'error': f"This does not appear to be a valid photo. {reason}.",
+            'raw_label': 'invalid_content'
+        }
+
+    # ──────────────────────────────────────────
+    # Stage 2: Gatekeeper Check
+    # Ensure it's some sort of plant using ImageNet (to avoid false positives on random objects)
+    # ──────────────────────────────────────────
     if np.max(image_array) <= 1.0:
-        image_array = image_array * 255.0 # Scale to [0, 255] first
+        image_scaled = image_array * 255.0
+    else:
+        image_scaled = np.copy(image_array)
     
     import tensorflow as tf
-    # This scales [0, 255] -> [-1, 1]
-    image_array = tf.keras.applications.mobilenet_v2.preprocess_input(image_array)
+    # Gatekeeper + MobileNetV2 expect [-1, 1] inputs
+    image_preprocessed = tf.keras.applications.mobilenet_v2.preprocess_input(image_scaled.copy())
 
-    # 1. Gatekeeper Check
-    is_plant, content_desc = check_is_plant(image_array)
+    is_plant, content_desc = check_is_plant(image_preprocessed)
     if not is_plant:
+        # We explicitly reject the non-plant image
+        logger.info(f"Gatekeeper REJECTED: Detected as {content_desc}")
         return {
             'success': False,
             'disease_name': "Invalid data",
             'confidence': 0.0,
             'is_healthy': False,
-            'error': f"Image appears to be '{content_desc.replace('_', ' ')}', not a crop leaf.",
+            'error_type': 'invalid_image',
+            'error': f"Image appears to contain '{content_desc.replace('_', ' ')}', not a crop leaf.",
             'raw_label': 'invalid_content'
         }
 
-    # 2. Disease Prediction
+    # ──────────────────────────────────────────
+    # Stage 3: Disease Model Prediction & Validation
+    # ──────────────────────────────────────────
     try:
-        predictions = model.predict(image_array, verbose=0)[0]
+        predictions = model.predict(image_preprocessed, verbose=0)[0]
+        entropy = _compute_entropy(predictions)
         
-        # Apply crop filter logic (simplified)
+        # Apply crop filter logic
+        filtered_predictions = predictions.copy()
         if crop_filter:
             valid_indices = [
                 i for i, label in enumerate(CLASS_LABELS) 
@@ -272,31 +341,60 @@ def predict_disease(image_array: np.ndarray, crop_filter: str = None) -> dict:
                    (crop_filter.lower() == 'cherry' and 'cherry' in label.lower())
             ]
             if valid_indices:
-                mask = np.zeros_like(predictions)
+                mask = np.zeros_like(filtered_predictions)
                 mask[valid_indices] = 1.0
-                predictions = predictions * mask
+                filtered_predictions = filtered_predictions * mask
         
-        pred_idx = int(np.argmax(predictions))
-        confidence = float(np.max(predictions) * 100)
+        pred_idx = int(np.argmax(filtered_predictions))
+        confidence = float(np.max(filtered_predictions) * 100)
         raw_label = CLASS_LABELS[pred_idx]
 
-        # 3. Confidence Threshold (Unsupported Crop Check)
-        if confidence < 45.0:
+        # Evaluate Uncertainty (Entropy + Confidence)
+        if entropy > 2.5:
+            logger.info(f"REJECTED: High entropy ({entropy:.2f})")
+            return {
+                'success': False,
+                'disease_name': "Unrecognized Image",
+                'confidence': round(confidence, 2),
+                'is_healthy': False,
+                'error_type': 'not_trained',
+                'error': f"The model is highly uncertain. Please upload a clear photo focusing only on a crop leaf.",
+                'raw_label': raw_label
+            }
+        
+        if entropy > 1.5 and confidence < 40.0:
+            logger.info(f"REJECTED: Mixed entropy ({entropy:.2f}) + low conf ({confidence:.1f}%)")
+            return {
+                'success': False,
+                'disease_name': "Low Confidence",
+                'confidence': round(confidence, 2),
+                'is_healthy': False,
+                'error_type': 'not_trained',
+                'error': f"Prediction too uncertain ({round(confidence, 1)}%). Try a clearer, closer photo.",
+                'raw_label': raw_label
+            }
+            
+        if confidence < 25.0:
+            logger.info(f"REJECTED: Low confidence ({confidence:.1f}%)")
             return {
                 'success': False,
                 'disease_name': "Crop Not Trained",
                 'confidence': round(confidence, 2),
                 'is_healthy': False,
-                'error': f"Low confidence ({round(confidence, 1)}%). This crop looks unsupported.",
+                'error_type': 'not_trained',
+                'error': f"This leaf is not recognized in our database with sufficient confidence.",
                 'raw_label': raw_label
             }
 
+        # Valid prediction!
+        logger.info(f"ACCEPTED: {raw_label} ({confidence:.1f}%) entropy={entropy:.3f}")
         return {
             'success': True, 
             'disease_name': _format_label(raw_label),
             'confidence': round(confidence, 2),
             'is_healthy': 'healthy' in raw_label.lower(),
             'raw_label': raw_label,
+            'error_type': None,
         }
 
     except Exception as e:
@@ -306,5 +404,6 @@ def predict_disease(image_array: np.ndarray, crop_filter: str = None) -> dict:
             'disease_name': "Error",
             'confidence': 0.0,
             'is_healthy': False,
+            'error_type': 'error',
             'error': str(e)
         }

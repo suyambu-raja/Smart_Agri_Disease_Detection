@@ -40,10 +40,13 @@ ALLOWED_HOSTS = [
     for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com,.hf.space').split(',')
 ]
 
-# Render SSL/HTTPS Configuration
+# SSL/HTTPS Configuration
+# HF Spaces handles SSL termination at the proxy level, so we must NOT
+# redirect HTTP→HTTPS inside the container or health checks will fail.
+_on_hf_space = any('.hf.space' in h for h in ALLOWED_HOSTS)
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = not _on_hf_space  # False on HF, True elsewhere
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
@@ -74,16 +77,7 @@ INSTALLED_APPS = [
     'weather',
 ]
 
-# ... existing code ...
-
-FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'firebase-adminsdk.json')
-
-# AI Services
-# AI Services
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
-DISEASE_MODEL_PATH = os.path.join(BASE_DIR, 'models', 'disease_model.h5')
-# ... existing code ...
+# (Firebase, AI, and model paths are configured in sections 13-15 below)
 
 # ──────────────────────────────────────────
 # 4. MIDDLEWARE
@@ -172,7 +166,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Use simple compressed storage (Manifest version crashes if collectstatic hasn't run)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -275,6 +270,12 @@ YIELD_MODEL_PATH = os.getenv(
 )
 
 # ──────────────────────────────────────────
+# 15. WEATHER API
+# ──────────────────────────────────────────
+
+WEATHER_API_KEY = os.getenv('WEATHER_API_KEY', '11bd0afda4ca4334bd0152117261302')
+
+# ──────────────────────────────────────────
 # 15. LOGGING
 # ──────────────────────────────────────────
 
@@ -286,24 +287,15 @@ LOGGING = {
             'format': '[{asctime}] {levelname} {name} {message}',
             'style': '{',
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'smart_agriculture.log',
-            'formatter': 'verbose',
-        },
     },
     'root': {
-        'handlers': ['console', 'file'],
+        'handlers': ['console'],
         'level': 'INFO',
     },
     'loggers': {
@@ -313,17 +305,17 @@ LOGGING = {
             'propagate': False,
         },
         'disease': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'yield_prediction': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'users': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },

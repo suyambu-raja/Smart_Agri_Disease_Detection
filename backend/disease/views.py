@@ -122,10 +122,12 @@ class DiseasePredictView(APIView):
                 logger.info("Unauthenticated prediction — not saved to DB.")
 
             return Response({
-                'success': True,
+                'success': result.get('success', True),
                 'disease_name': result['disease_name'],
                 'confidence': result['confidence'],
                 'is_healthy': result['is_healthy'],
+                'error_type': result.get('error_type'),
+                'error': result.get('error'),
             })
 
         except Exception as e:

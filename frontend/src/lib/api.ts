@@ -83,6 +83,8 @@ export interface DiseaseResult {
     disease_name: string;
     confidence: number;
     is_healthy: boolean;
+    error_type?: 'invalid_image' | 'not_trained' | 'error' | null;
+    error?: string;
 }
 
 export interface RecommendationResult {

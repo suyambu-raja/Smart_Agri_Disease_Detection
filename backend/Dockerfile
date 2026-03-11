@@ -14,6 +14,9 @@ ENV DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,.onrender.com,.hf.space,suyambu08-s
 # Firebase
 ENV FIREBASE_CREDENTIALS_PATH=firebase_credentials.json
 
+# Skip the Gatekeeper MobileNetV2 model to save memory on HF free tier
+ENV SKIP_GATEKEEPER=False
+
 # CORS – allow frontend origins
 ENV CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,https://smart-agri-disease-detection.vercel.app,https://smart-agri-disease-detection.netlify.app
 

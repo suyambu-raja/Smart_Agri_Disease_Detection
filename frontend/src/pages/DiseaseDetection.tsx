@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Camera, CheckCircle2, ChevronRight, Loader2, X, AlertCircle, Sprout, ShieldCheck, Beaker } from 'lucide-react';
+import { Upload, Camera, CheckCircle2, ChevronRight, Loader2, X, AlertCircle, Sprout, ShieldCheck, Beaker, Ban, HelpCircle } from 'lucide-react';
 import { predictDisease, getRecommendation, getDiseaseHistory, type DiseaseResult, type RecommendationResult, type DiseaseHistoryItem } from '@/lib/api';
 import { useTTS } from '@/hooks/useTTS';
 
@@ -135,7 +135,13 @@ const DiseaseDetection = () => {
       setResult(data);
 
       if (!data.success) {
-        setError('Could not detect disease. Please try another image.');
+        if (data.error_type === 'invalid_image') {
+          setError(data.error || 'This does not appear to be a plant or leaf image. Please upload a clear photo of a crop leaf.');
+        } else if (data.error_type === 'not_trained') {
+          setError(data.error || 'This crop leaf is not recognized by our model. Please try a supported crop.');
+        } else {
+          setError(data.error || 'Could not detect disease. Please try another image.');
+        }
         setLoading(false);
         return;
       }
@@ -308,21 +314,58 @@ const DiseaseDetection = () => {
                     <div className="p-5 max-w-md mx-auto space-y-6 flex-1 overflow-y-auto w-full">
                       {/* Summary Card */}
                       <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center">
-                        <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 ${result.is_healthy ? 'bg-green-100' : 'bg-red-50'}`}>
-                          {result.is_healthy ? <CheckCircle2 className="w-10 h-10 text-green-600" /> : <AlertCircle className="w-10 h-10 text-red-500" />}
-                        </div>
-                        <h2 className="text-2xl font-extrabold text-gray-900 leading-tight mb-2">{result.disease_name}</h2>
-                        <div className="flex items-center justify-center gap-3">
-                          <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-lg text-sm font-bold border border-gray-200">
-                            Conf: {Math.round(result.confidence)}%
-                          </span>
-                          {!result.is_healthy && (
-                            <span className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-bold">
-                              Action Needed
-                            </span>
+                        {/* Icon based on result type */}
+                        <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 ${result.error_type === 'invalid_image' ? 'bg-red-100' :
+                          result.error_type === 'not_trained' ? 'bg-orange-100' :
+                            result.is_healthy ? 'bg-green-100' : 'bg-red-50'
+                          }`}>
+                          {result.error_type === 'invalid_image' ? (
+                            <Ban className="w-10 h-10 text-red-600" />
+                          ) : result.error_type === 'not_trained' ? (
+                            <HelpCircle className="w-10 h-10 text-orange-500" />
+                          ) : result.is_healthy ? (
+                            <CheckCircle2 className="w-10 h-10 text-green-600" />
+                          ) : (
+                            <AlertCircle className="w-10 h-10 text-red-500" />
                           )}
                         </div>
-                        {result.error && (
+
+                        <h2 className="text-2xl font-extrabold text-gray-900 leading-tight mb-2">{result.disease_name}</h2>
+
+                        {/* Status badges — only show for successful predictions */}
+                        {!result.error_type && (
+                          <div className="flex items-center justify-center gap-3">
+                            <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-lg text-sm font-bold border border-gray-200">
+                              Conf: {Math.round(result.confidence)}%
+                            </span>
+                            {!result.is_healthy && (
+                              <span className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-bold">
+                                Action Needed
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Error messages for invalid images */}
+                        {result.error_type === 'invalid_image' && (
+                          <div className="mt-4 bg-red-50 text-red-700 px-4 py-3 rounded-xl text-sm font-medium border border-red-100 flex items-start gap-2 text-left">
+                            <Ban className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                            <span>{result.error || 'This does not appear to be a plant or leaf image. Please upload a clear photo of a crop leaf.'}</span>
+                          </div>
+                        )}
+
+                        {/* Error messages for untrained crops */}
+                        {result.error_type === 'not_trained' && (
+                          <div className="mt-4 space-y-3">
+                            <div className="bg-orange-50 text-orange-700 px-4 py-3 rounded-xl text-sm font-medium border border-orange-100 flex items-start gap-2 text-left">
+                              <HelpCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                              <span>{result.error || 'This leaf is not recognized by our model.'}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Generic errors */}
+                        {result.error && !result.error_type && (
                           <div className="mt-4 bg-red-50 text-red-700 px-4 py-3 rounded-xl text-sm font-medium border border-red-100 flex items-start gap-2 text-left">
                             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                             <span>{result.error}</span>
