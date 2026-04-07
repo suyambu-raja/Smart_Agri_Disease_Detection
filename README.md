@@ -1,3 +1,13 @@
+---
+title: Smart Agriculture Disease Detection
+emoji: 🌿
+colorFrom: green
+colorTo: yellow
+sdk: docker
+app_port: 8080
+pinned: false
+---
+
 # Smart Agriculture AI 🌱
 
 Cutting-edge disease detection, yield prediction, and treatment recommendation system powered by AI.
